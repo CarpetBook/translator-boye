@@ -265,6 +265,7 @@ async def on_message(message: discord.Message):
 
                 if com == "clear": # clear chat history
                     await message.channel.send(content="i forgor :skull:\nChat memory has been cleared.")
+                    chat_memories[idh].clear()
 
                     if idh in mark_channel_ids:
                         chat_memories[idh].add(mark_pre_msg, "Mark: Hey, baby. How are you tonight?")

@@ -41,5 +41,10 @@ class Memory:
             print(self.count_tokens())
             # print(fullprom)
     
+    def clear(self):
+        self.memory = []
+        self.tokens = 0
+        return self
+    
     def get(self):
         return self.memory

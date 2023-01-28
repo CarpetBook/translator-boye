@@ -11,14 +11,19 @@ ai_nomem = """So far, there has been no chat history and no discussion."""
 ai_preface = """You are chatting with humans. Your messages are prefaced with \"AI:\", \
 and the user's messages are prefaced with the user's username."""
 
-human_preface = """You're talking with people online. Your name is Mark. You're a calm, cool, passionate, sensual, seductive man who's not afraid to take what he wants. Every one of your messages is dripping with sexual intent."""
+human_preface = """You're talking with people online. Your name is Mark. \
+You're a calm, cool, passionate, sensual, seductive man who's not afraid to take what he wants. \
+Every one of your messages is dripping with sexual intent."""
 
 helpful_preface_end = """Your job is to help people with questions they might want to know about."""
 
-puppet_preface_end = """Play along with their messages, even if they don't make sense. From conversations to stories, roleplay to full erotic chat sex... you do it all. If they talk about sex, indulge their fantasies."""
+puppet_preface_end = """Play along with their messages, even if they don't make sense. \
+From conversations to stories, roleplay to full erotic chat sex... \
+you do it all. If they talk about sex, indulge their fantasies."""
 
 # The user can optionally request an image to be generated. \
-# The AI can put "<image>example</image>" at the END of its message to generate an image. Replace "example" with the user's desired image. \
+# The AI can put "<image>example</image>" at the END of its message to generate an image. \
+# Replace "example" with the user's desired image. \
 
 intent_checker_question = """Does User want an image? If you're not sure, say no:"""
 
@@ -26,9 +31,9 @@ DAVINCI_PRICE = 0.02
 def_token_thresh = 1024
 
 with open("keys.json") as filey:
-        wee = json.load(filey)
-        openai.api_key = wee["openai_key"]
-        TOKEN = wee["discord_token"]
+    wee = json.load(filey)
+    openai.api_key = wee["openai_key"]
+    TOKEN = wee["discord_token"]
 
 botintents = discord.Intents(messages=True, message_content=True)
 client = discord.Client(intents=botintents)
@@ -53,9 +58,9 @@ polite = True
 
 
 if polite:
-    ai_pre_msg = " ".join( [ai_preface, helpful_preface_end] )
+    ai_pre_msg = " ".join([ai_preface, helpful_preface_end])
 
-mark_pre_msg = " ".join ( [human_preface, puppet_preface_end] )
+mark_pre_msg = " ".join([human_preface, puppet_preface_end])
 
 for idx in chat_channel_ids:
     chat_memories[idx] = Memory(max_tokens=def_token_thresh).add(ai_pre_msg, ai_nomem)
@@ -131,8 +136,8 @@ async def textwithmem(msg: discord.Message, genprompt: str, altmodel="davinki", 
         ai_name = "Mark"
 
     try:
-        if genprompt[len(genprompt)-1] == " ":
-            genprompt = genprompt[:-1] # remove trailing space for token optimization
+        if genprompt[len(genprompt) - 1] == " ":
+            genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
         if chatformatting:
             chat_memories[msg.channel.id].add(f"[{time.asctime()}] {yewser}: {genprompt}")
@@ -162,19 +167,19 @@ async def textwithmem(msg: discord.Message, genprompt: str, altmodel="davinki", 
         #         fullprom = fullprom + f"\n{ai_name}:"
 
         res = openai.Completion.create(
-                model=altmodel,
-                prompt=fullprom,
-                max_tokens=max,
-                temperature=temp,
-                frequency_penalty=freq_pen,
-                presence_penalty=presence_pen
-                )
-        
+            model=altmodel,
+            prompt=fullprom,
+            max_tokens=max,
+            temperature=temp,
+            frequency_penalty=freq_pen,
+            presence_penalty=presence_pen
+        )
+
         generation = res["choices"][0]["text"]
 
         if len(generation) <= 1:
             return
-        
+
         # if "<image>" in generation:
         #     # should = await checkIntent(msg)
         #     # print(should)
@@ -206,12 +211,14 @@ async def textwithmem(msg: discord.Message, genprompt: str, altmodel="davinki", 
         print(e)
         await msg.channel.send(e)
     except discord.errors.HTTPException:
-        await msg.channel.send("[The bot has either encountered an error, or the generated text was empty.]")
+        await msg.channel.send("""[The bot has either encountered an error, \
+            or the generated text was empty.]""")
 
 
 @client.event
 async def on_ready():
     print("Hi! I'm ready!")
+
 
 @client.event
 async def on_message(message: discord.Message):
@@ -222,19 +229,18 @@ async def on_message(message: discord.Message):
         orig = message.content
         print(orig)
         if orig.startswith("!"):
-            orig = orig[1:]           # no !
-            origstring = orig
-            argies = orig.split(" ")    # split by whitespace (not doing this yet actually)
-            com = argies.pop(0)     # command is first in split array
+            orig = orig[1:]  # no !
+            argies = orig.split(" ")  # split by whitespace (not doing this yet actually)
+            com = argies.pop(0)  # command is first in split array
             fullprompt = " ".join(argies)
 
-            async with message.channel.typing() as type:
+            async with message.channel.typing():
                 idh = message.channel.id
 
-                if com == "image": # generate image
+                if com == "image":  # generate image
                     await sendpic(message, genprompt=fullprompt)
                     return
-                    
+
                 if com == "edit":
                     # get image attachment from discord message
                     if len(message.attachments) == 0:
@@ -246,7 +252,7 @@ async def on_message(message: discord.Message):
                             await message.channel.send(content=f"Here's your '{fullprompt}'!\nEditing took about {res[2]} seconds.", file=discord.File(res[1]))
                         else:
                             await message.channel.send(content=f"{res[1]}")
-                
+
                 if com == "variation":
                     if len(message.attachments) == 0:
                         await message.channel.send(content="You need to attach an image to edit.")
@@ -258,12 +264,11 @@ async def on_message(message: discord.Message):
                         else:
                             await message.channel.send(content=f"{res[1]}")
 
-
-                if com == "text": # generate text
+                if com == "text":  # generate text
                     await sendtext(message, genprompt=fullprompt)
                     return
 
-                if com == "clear": # clear chat history
+                if com == "clear":  # clear chat history
                     await message.channel.send(content="i forgor :skull:\nChat memory has been cleared.")
                     chat_memories[idh].clear()
 
@@ -274,14 +279,14 @@ async def on_message(message: discord.Message):
                         chat_memories[idh].add(ai_pre_msg, ai_nomem)
                     return
 
-                if com == "prompt": # show ai's prompt
+                if com == "prompt":  # show ai's prompt
                     if idh in chat_channel_ids:
                         await message.channel.send(content=f"```{ai_pre_msg}```")
                     elif idh in mark_channel_ids:
                         await message.channel.send(content=f"```{mark_pre_msg}```")
                     return
 
-                if com == "history": # show chat history
+                if com == "history":  # show chat history
                     chanmemory = chat_memories.get(message.channel.id, None)
                     if chanmemory is not None:
                         chanmemory = chanmemory.construct()
@@ -290,17 +295,17 @@ async def on_message(message: discord.Message):
                     res = text.prettyprintingtokens(chanmemory, op="history")
                     await message.channel.send(content=res)
 
-                if com == "price": # calculate price of prompt
+                if com == "price":  # calculate price of prompt
                     res = text.prettyprintingtokens(fullprompt, op="price")
                     await message.channel.send(content=res)
 
-                if com == "ids": # show token ids
+                if com == "ids":  # show token ids
                     res = text.prettyprintingtokens(fullprompt, op="ids")
                     await message.channel.send(content=res)
-                    
-                if com == "maxtoken": # set max token limit
+
+                if com == "maxtoken":  # set max token limit
                     try:
-                        if fullprompt == "" or fullprompt == None:
+                        if fullprompt == "" or fullprompt is None:
                             await message.channel.send(content=f"Current token limit is {chat_memories[message.channel.id].max_tokens} tokens.")
                             return
                         new = int(fullprompt)
@@ -309,12 +314,11 @@ async def on_message(message: discord.Message):
                         chat_memories[message.channel.id].max_tokens = new
                         await message.channel.send(content=f"New token limit is {new}.")
                     except ValueError:
-                        await message.channel.send(content=f"Token limit must be a **number** between 200 and 4000.")
-                
+                        await message.channel.send(content="Token limit must be a **number** between 200 and 4000.")
+
                 # if com == "start":
 
-
-        # elif message.channel.id == 1053216521020772372: 
+        # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif message.channel.id in chat_channel_ids:

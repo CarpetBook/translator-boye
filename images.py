@@ -4,6 +4,7 @@ import time
 import requests
 from PIL import Image, ImageDraw
 
+
 async def genpic(genprompt: str):
     try:
         tic = time.time()
@@ -23,13 +24,15 @@ async def genpic(genprompt: str):
     except openai.error.OpenAIError as e:
         return ("fail", e)
 
+
 async def downloadpic(url: str):
     img_data = requests.get(url).content
     filename = "./edit_pics/" + str(time.time()) + ".png"
     with open(filename, 'wb') as handler:
         handler.write(img_data)
-    
+
     return filename
+
 
 async def editpic(filename: str, genprompt: str):
     image = Image.open(filename)
@@ -47,10 +50,11 @@ async def editpic(filename: str, genprompt: str):
         res = openai.Image.create_edit(
             image=open(oldfile, "rb"),
             mask=open(maskfile, "rb"),
-            prompt=genprompt, 
-            n=1, 
-            size="512x512", 
-            response_format="b64_json")
+            prompt=genprompt,
+            n=1,
+            size="512x512",
+            response_format="b64_json"
+        )
         toc = time.time()
 
         timer = str(round(toc - tic, 2))
@@ -64,6 +68,7 @@ async def editpic(filename: str, genprompt: str):
         return ("success", newfile, timer)
     except openai.error.OpenAIError as e:
         return ("fail", e)
+
 
 async def variationpic(filename: str):
     image = Image.open(filename)
@@ -94,6 +99,7 @@ async def variationpic(filename: str):
     except openai.error.OpenAIError as e:
         return ("fail", e)
 
+
 def cropSquare(image: Image):
     width, height = image.size
     if width == height:
@@ -112,6 +118,7 @@ def cropSquare(image: Image):
         top = diff / 2
         bottom = height - top
         return image.crop((left, top, right, bottom))
+
 
 def makeTransparentEllipse(image: Image):
     width, height = image.size

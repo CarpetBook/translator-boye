@@ -7,7 +7,10 @@ This bot will listen to certain configured channels and respond to messages like
 ## Commands:
 
 ### !image \<prompt>
-Generates a 512x512 image from the DALL-E 2 API. 
+Generates a 512x512 image from the DALL-E 2 API.
+
+### !redo
+Generates another image from the last prompt.
 
 ### !variation
 Generates a variation of the attached image using the DALL-E 2 API.

@@ -4,7 +4,7 @@ import openai
 import json
 import images
 import text
-from memory import Memory
+from memory import ChatMemory
 
 ai_nomem = """So far, there has been no chat history and no discussion."""
 
@@ -49,6 +49,7 @@ mark_channel_ids = [
 ]
 
 chat_memories = {}
+image_memories = {}
 ai_pre_msg = ""
 mark_pre_msg = ""
 
@@ -63,10 +64,10 @@ if polite:
 mark_pre_msg = " ".join([human_preface, puppet_preface_end])
 
 for idx in chat_channel_ids:
-    chat_memories[idx] = Memory(max_tokens=def_token_thresh).add(ai_pre_msg, ai_nomem)
+    chat_memories[idx] = ChatMemory(max_tokens=def_token_thresh).add(ai_pre_msg, ai_nomem)
 
 for mdx in mark_channel_ids:
-    chat_memories[mdx] = Memory(max_tokens=def_token_thresh).add(mark_pre_msg, "Mark: Hey, baby. How are you tonight?")
+    chat_memories[mdx] = ChatMemory(max_tokens=def_token_thresh).add(mark_pre_msg, "Mark: Hey, baby. How are you tonight?")
 
 
 async def sendtext(msg, genprompt):
@@ -80,7 +81,11 @@ async def sendtext(msg, genprompt):
     await msg.channel.send(content=khan_tent)
 
 
-async def sendpic(msg: discord.Message, genprompt: str):
+async def sendpic(msg: discord.Message, genprompt: str, redo=False):
+    retried = False
+    if msg.channel.id in image_memories.keys():
+        if image_memories[msg.channel.id] == genprompt and not redo:
+            retried = True
     res = await images.genpic(genprompt)
     if res[0] == "fail":
         await msg.channel.send(res[1])
@@ -88,9 +93,12 @@ async def sendpic(msg: discord.Message, genprompt: str):
     else:
         filename = res[1]
         timer = res[2]
+    image_memories[msg.channel.id] = genprompt
 
     piccy = discord.File(fp=open(filename, "rb"))
     send = f"Here's your \'{genprompt}\'!\nGeneration took about {timer} seconds."
+    if retried:
+        send += "\n\nP.S., you can use the `!redo` command to retry the last image."
 
     await msg.channel.send(content=send, file=piccy)
 
@@ -239,6 +247,10 @@ async def on_message(message: discord.Message):
 
                 if com == "image":  # generate image
                     await sendpic(message, genprompt=fullprompt)
+                    return
+
+                if com == "redo":
+                    await sendpic(message, genprompt=image_memories[idh], redo=True)
                     return
 
                 if com == "edit":

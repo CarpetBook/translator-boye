@@ -4,7 +4,7 @@ import time
 import text
 
 
-class Memory:
+class ChatMemory:
     def __init__(self, min_message_limit=15, max_tokens=1024):
         self.memory = []
         self.tokens = 0
@@ -49,3 +49,22 @@ class Memory:
 
     def get(self):
         return self.memory
+
+
+class Memory:
+    def __init__(self):
+        self.memory = []
+
+    def add(self, user, *content):
+        for i in content:
+            self.memory.append((time.time(), user, i))
+            print("added to memory: " + str((time.time(), user, i)))
+            print(self.memory)
+        return self
+
+    def pop(self):
+        return self.memory.pop()
+
+    def clear(self):
+        self.memory = []
+        return self

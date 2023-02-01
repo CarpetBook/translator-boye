@@ -8,7 +8,9 @@ from PIL import Image, ImageDraw
 async def genpic(genprompt: str):
     try:
         tic = time.time()
-        res = openai.Image.create(prompt=genprompt, n=1, size="512x512", response_format="b64_json")
+        res = openai.Image.create(
+            prompt=genprompt, n=1, size="512x512", response_format="b64_json"
+        )
         toc = time.time()
 
         timer = str(round(toc - tic, 2))
@@ -28,7 +30,7 @@ async def genpic(genprompt: str):
 async def downloadpic(url: str):
     img_data = requests.get(url).content
     filename = "./edit_pics/" + str(time.time()) + ".png"
-    with open(filename, 'wb') as handler:
+    with open(filename, "wb") as handler:
         handler.write(img_data)
 
     return filename
@@ -53,7 +55,7 @@ async def editpic(filename: str, genprompt: str):
             prompt=genprompt,
             n=1,
             size="512x512",
-            response_format="b64_json"
+            response_format="b64_json",
         )
         toc = time.time()
 
@@ -81,10 +83,8 @@ async def variationpic(filename: str):
     try:
         tic = time.time()
         res = openai.Image.create_variation(
-            image=open(oldfile, "rb"),
-            n=1,
-            size="512x512",
-            response_format="b64_json")
+            image=open(oldfile, "rb"), n=1, size="512x512", response_format="b64_json"
+        )
         toc = time.time()
 
         timer = str(round(toc - tic, 2))

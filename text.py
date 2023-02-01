@@ -12,10 +12,7 @@ async def gentext(genprompt, no_prompt=False):
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
         res = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=genprompt,
-            max_tokens=512,
-            temperature=0.75
+            model="text-davinci-003", prompt=genprompt, max_tokens=512, temperature=0.75
         )
 
         generation = res["choices"][0]["text"]
@@ -50,7 +47,10 @@ def prettyprintingtokens(text: str, op="history") -> str:
     pretty = ""
     if op == "price":
         pretty = f"```{text}```Text is {count} tokens.\nThis prompt costs approximately ${format(price, '.5f')}."
-        pretty = pretty + f"\nThe entire prompt would occupy about {memfull:.0f}% of the AI's memory."
+        pretty = (
+            pretty
+            + f"\nThe entire prompt would occupy about {memfull:.0f}% of the AI's memory."
+        )
     if op == "ids":
         id_strs = []
         for idx in range(len(ids)):
@@ -59,6 +59,9 @@ def prettyprintingtokens(text: str, op="history") -> str:
         pretty = f"```{tok}```"
     if op == "history":
         pretty = f"```{text}```Chat history contains {count} tokens.\nThe next message will cost approximately ${format(price, '.5f')} to generate."
-        pretty = pretty + f"\nThe chat history currently occupies about {memfull:.0f}% of the AI's memory."
+        pretty = (
+            pretty
+            + f"\nThe chat history currently occupies about {memfull:.0f}% of the AI's memory."
+        )
 
     return pretty

@@ -35,9 +35,14 @@ class ChatMemory:
     def clean(self):
         print(self.count_tokens())
 
-        while self.tokens >= self.max_tokens and not len(self.memory) < self.min_message_limit:  # if the prompt is too long, cut off the oldest message... keep a minimum amount of messages
+        while (
+            self.tokens >= self.max_tokens
+            and not len(self.memory) < self.min_message_limit
+        ):  # if the prompt is too long, cut off the oldest message... keep a minimum amount of messages
             preface = self.memory[0]
-            self.memory = self.memory[2:]  # if chat memory is longer than 20 messages, cut off the oldest two
+            self.memory = self.memory[
+                2:
+            ]  # if chat memory is longer than 20 messages, cut off the oldest two
             self.memory.insert(0, preface)
             print(self.count_tokens())
             # print(fullprom)

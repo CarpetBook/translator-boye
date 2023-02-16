@@ -1,8 +1,8 @@
-*.json
+keys.json
 *.ipynb
 imageslut_pics/*
 edit_pics/*
 __pycache__/*
 loggy
 nohup.out
-
+.vscode/*

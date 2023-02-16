@@ -8,8 +8,7 @@ from memory import ChatMemory
 
 ai_nomem = """So far, there has been no chat history and no discussion."""
 
-ai_preface = """You are chatting with humans. Your messages are prefaced with \"AI:\", \
-and the user's messages are prefaced with the user's username."""
+ai_preface = """You are chatting with humans. The user's messages are prefaced with the user's username."""
 
 human_preface = """You're talking with people online. Your name is Mark. \
 You're a calm, cool, passionate, sensual, seductive man who's not afraid to take what he wants. \
@@ -32,18 +31,32 @@ intent_checker_question = """Does User want an image? If you're not sure, say no
 DAVINCI_PRICE = 0.02
 def_token_thresh = 1024
 
+chat_channel_ids = []
+mark_channel_ids = []
+server_options = {}
+
 with open("keys.json") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
     TOKEN = wee["discord_token"]
 
+with open("settings.json") as setty:
+    the = json.load(setty)
+    chat_channel_ids = the["chat_channels"]
+    print(chat_channel_ids)
+    mark_channel_ids = the["mark_channels"]
+    server_options = the["server_options"]
+
+
+def save_settings():
+    with open("settings.json", "w") as savey:
+        savey.write(json.dumps(server_options))
+
+
 botintents = discord.Intents(messages=True, message_content=True)
-client = discord.Client(intents=botintents)
+activity = discord.Activity(name="for your questions", type=discord.ActivityType.watching)
+client = discord.Client(intents=botintents, activity=activity)
 
-
-chat_channel_ids = [1052918672009744414, 1052918701663461396]
-
-mark_channel_ids = [1055681260233699359]
 
 chat_memories = {}
 image_memories = {}
@@ -142,6 +155,8 @@ async def textwithmem(
     # preface = ai_pre_msg
     ai_name = "AI"
 
+    ai_name = "You"
+
     if mark:
         # preface = mark_pre_msg
         ai_name = "Mark"
@@ -149,13 +164,6 @@ async def textwithmem(
     try:
         if genprompt[len(genprompt) - 1] == " ":
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
-
-        if chatformatting:
-            chat_memories[msg.channel.id].add(
-                f"[{time.asctime()}] {yewser}: {genprompt}"
-            )
-        else:
-            chat_memories[msg.channel.id].add(f"{genprompt}")
 
         # print(len(chat_memories[msg.channel.id].get()))
         # if len(chatarrays[msg.channel.id]) >= 12:
@@ -166,7 +174,8 @@ async def textwithmem(
         fullprom = chat_memories[msg.channel.id].construct()
         # print(fullprom)
         if chatformatting:
-            fullprom = fullprom + f"\n[{time.asctime()}] {ai_name}:"
+            fullprom = fullprom + f"{yewser}: {genprompt}"
+            fullprom = fullprom + f"\n"
 
         print(text.tokenize(fullprom)["count"])
 
@@ -212,17 +221,25 @@ async def textwithmem(
         #     await genpic(msg, improm, textprom)
         #     return
 
-        await msg.channel.send(content=generation)
+        await msg.reply(content=generation)
 
         if chatformatting:
-            generation = f"[{time.asctime()}] {ai_name}:" + generation
+            chat_memories[msg.channel.id].add(
+                f"{yewser}: {genprompt}"
+            )
+        else:
+            chat_memories[msg.channel.id].add(f"{genprompt}")
+
+        if chatformatting:
+            generation = generation + "\n"
 
         chat_memories[msg.channel.id].add(generation)
         # print(chatarrays[msg.channel.id])
 
+        return 0  # ok
+
     except openai.error.OpenAIError as e:
-        print(e)
-        await msg.channel.send(e)
+        return e  # not ok...
     except discord.errors.HTTPException:
         await msg.channel.send(
             """[The bot has either encountered an error, \
@@ -238,6 +255,9 @@ async def on_ready():
 @client.event
 async def on_message(message: discord.Message):
     global token_thresh
+    global ai_pre_msg
+
+    idh = message.channel.id
 
     if message.author.id != client.user.id:
         print("user: ", message.author.name)
@@ -252,9 +272,12 @@ async def on_message(message: discord.Message):
             fullprompt = " ".join(argies)
 
             async with message.channel.typing():
-                idh = message.channel.id
+
+                print("command: ", com)
+                print("fullprompt: ", fullprompt)
 
                 if com == "image":  # generate image
+                    # if server_options[message.guild.id]
                     await sendpic(message, genprompt=fullprompt)
                     return
 
@@ -317,10 +340,27 @@ async def on_message(message: discord.Message):
                     return
 
                 if com == "prompt":  # show ai's prompt
-                    if idh in chat_channel_ids:
-                        await message.channel.send(content=f"```{ai_pre_msg}```")
-                    elif idh in mark_channel_ids:
-                        await message.channel.send(content=f"```{mark_pre_msg}```")
+                    if fullprompt == "":
+                        if idh in chat_channel_ids:
+                            await message.channel.send(content=f"```{ai_pre_msg}```")
+                        elif idh in mark_channel_ids:
+                            await message.channel.send(content=f"```{mark_pre_msg}```")
+                    elif fullprompt == "reset":
+                        ai_pre_msg = ai_preface + helpful_preface_end
+                        await message.channel.send(content=f"Prompt was reset.\n```{ai_preface}```")
+                        await message.channel.send(
+                            content="i forgor :skull:\nChat memory has been cleared."
+                        )
+                        chat_memories[idh].clear()
+                        chat_memories[idh].add(ai_pre_msg, ai_nomem)
+                    else:
+                        ai_pre_msg = fullprompt
+                        await message.channel.send(content=f"Prompt was changed.\n```{fullprompt}```")
+                        await message.channel.send(
+                            content="i forgor :skull:\nChat memory has been cleared."
+                        )
+                        chat_memories[idh].clear()
+                        chat_memories[idh].add(ai_pre_msg, ai_nomem)
                     return
 
                 if com == "history":  # show chat history
@@ -362,10 +402,18 @@ async def on_message(message: discord.Message):
         # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
-        elif message.channel.id in chat_channel_ids:
-            async with message.channel.typing():
-                await textwithmem(message, genprompt=orig)
-        elif message.channel.id in mark_channel_ids:
+        elif idh in chat_channel_ids:
+            if message.content.startswith('='):
+                async with message.channel.typing():
+                    ret = await textwithmem(message, genprompt=orig[1:])
+                    tries = 0
+                    if ret != 0:
+                        tries += 1
+                        if tries > 3:
+                            await message.channel.reply(content="Sorry, something's wrong. I tried three times, and they all gave errors. You may have to try again later, or contact hako.")
+                            return
+                        await textwithmem(message, genprompt=orig[1:])
+        elif idh in mark_channel_ids:
             async with message.channel.typing():
                 await textwithmem(message, genprompt=orig, mark=True)
         # elif message.channel.id == 1060826456000827462:

@@ -6,13 +6,13 @@ tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 DAVINCI_PRICE = 0.02
 
 
-async def gentext(genprompt, no_prompt=False):
+async def gentext(genprompt, no_prompt=False, **kwargs):
     try:
         if genprompt[len(genprompt) - 1] == " ":
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
         res = openai.Completion.create(
-            model="text-davinci-003", prompt=genprompt, max_tokens=512, temperature=0.75
+            model="text-davinci-003", prompt=genprompt, *kwargs
         )
 
         generation = res["choices"][0]["text"]

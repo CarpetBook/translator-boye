@@ -236,6 +236,7 @@ async def on_message(message: discord.Message):
             )  # split by whitespace (not doing this yet actually)
             com = argies.pop(0)  # command is first in split array
             fullprompt = " ".join(argies)
+            ops = server_options.get(message.guild.id, None)
 
             async with message.channel.typing():
 
@@ -243,7 +244,11 @@ async def on_message(message: discord.Message):
                 print("fullprompt: ", fullprompt)
 
                 if com == "image":  # generate image
-                    # if server_options[message.guild.id]
+                    if ops is not None and ops["allow_images"] is False:
+                        await message.channel.send(
+                            content="Sorry, image generation is disabled on this server."
+                        )
+                        return
                     await sendpic(message, genprompt=fullprompt)
                     return
 
@@ -369,7 +374,12 @@ async def on_message(message: discord.Message):
         #     async with message.channel.typing():
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif idh in chat_channel_ids:
-            if message.content.startswith('='):
+            ops = server_options.get(message.guild.id, None)
+            if ops is None:
+                prefix = ops["chat_prefix"]
+            if ops["disabled"] is True:
+                return
+            if message.content.startswith(prefix):
                 async with message.channel.typing():
                     ret = await textwithmem(message, genprompt=orig[1:])
                     tries = 0

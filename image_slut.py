@@ -165,28 +165,13 @@ async def textwithmem(
         if genprompt[len(genprompt) - 1] == " ":
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
-        # print(len(chat_memories[msg.channel.id].get()))
-        # if len(chatarrays[msg.channel.id]) >= 12:
-        #     chatarrays[msg.channel.id] = chatarrays[msg.channel.id][3:] # if chat memory is longer than 20 messages, cut off the oldest two
-        #     chatarrays[msg.channel.id].insert(0, preface)
-        #     # print(chatarrays[msg.channel.id])
-
         fullprom = chat_memories[msg.channel.id].construct()
         # print(fullprom)
         if chatformatting:
             fullprom = fullprom + f"{yewser}: {genprompt}"
-            fullprom = fullprom + f"\n"
+            fullprom = fullprom + "\n"
 
         print(text.tokenize(fullprom)["count"])
-
-        # while text.tokenize(fullprom)["count"] >= chat_memories[msg.channel.id]["maxtoken"] and len(chat_memories[msg.channel.id]["history"]) > 5: # if the prompt is too long, cut off the oldest message... keep at least 5 messages
-        #     print(text.tokenize(fullprom)["count"])
-        #     chat_memories[msg.channel.id]["history"] = chat_memories[msg.channel.id]["history"][2:] # if chat memory is longer than 20 messages, cut off the oldest two
-        #     chat_memories[msg.channel.id]["history"].insert(0, preface)
-        #     fullprom = "\n".join(chat_memories[msg.channel.id]["history"])
-        #     # print(fullprom)
-        #     if chatformatting:
-        #         fullprom = fullprom + f"\n{ai_name}:"
 
         res = openai.Completion.create(
             model=altmodel,
@@ -201,25 +186,6 @@ async def textwithmem(
 
         if len(generation) <= 1:
             return
-
-        # if "<image>" in generation:
-        #     # should = await checkIntent(msg)
-        #     # print(should)
-        #     # if not should:
-        #     #     chatarrays[msg.channel.id].append("AI:" + generation)
-        #     #     chatarrays[msg.channel.id].append("SYSTEM WARNING: AI tried to generate image against User's wishes. Retrying AI response.")
-        #     #     print(chatarrays[msg.channel.id])
-        #     #     await textwithmem(msg, genprompt)
-        #     #     return
-        #     improm = generation.split("<image>")
-        #     textprom = improm[0]
-        #     improm = improm[1].split("</image>")[0]
-        #     if chatformatting:
-        #         weee = "AI:" + generation
-        #     chatarrays[msg.channel.id].append(weee)
-        #     # print(improm)
-        #     await genpic(msg, improm, textprom)
-        #     return
 
         await msg.reply(content=generation)
 

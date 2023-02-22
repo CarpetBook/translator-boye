@@ -1,5 +1,6 @@
 import time
 import discord
+from discord import app_commands
 import openai
 import json
 import images
@@ -377,7 +378,7 @@ async def on_message(message: discord.Message):
             ops = server_options.get(message.guild.id, None)
             if ops is None:
                 prefix = ops["chat_prefix"]
-            if ops["disabled"] is True:
+            if not ops["can_chat"]:
                 return
             if message.content.startswith(prefix):
                 async with message.channel.typing():
@@ -396,5 +397,63 @@ async def on_message(message: discord.Message):
         #     async with message.channel.typing():
         #         await selfchat(message, genprompt=orig)
 
+
+# begin COMPLETE refactor of command loop
+
+# check funcs here
+
+def isNotClient():
+    def predicate(interaction: discord.Interaction) -> bool:
+        return interaction.user.id != client.user.id
+    return app_commands.check(predicate)
+
+
+def serverKnown(guild_id):
+    return guild_id in server_options
+
+
+def serverAllowedChat(interaction: discord.Interaction):
+    ids = interaction.guild.id
+    return serverKnown(ids) and server_options[ids]["can_chat"]
+
+
+def serverAllowedImage(interaction: discord.Interaction):
+    ids = interaction.guild.id
+    return serverKnown(ids) and server_options[ids]["allow_images"]
+
+
+# async def sendpic(msg: discord.Message, genprompt: str, redo=False):
+#     retried = False
+#     if msg.channel.id in image_memories.keys():
+#         if image_memories[msg.channel.id] == genprompt and not redo:
+#             retried = True
+#     res = await images.genpic(genprompt)
+#     if res[0] == "fail":
+#         await msg.channel.send(res[1])
+#         return
+#     else:
+#         filename = res[1]
+#         timer = res[2]
+#     image_memories[msg.channel.id] = genprompt
+
+#     piccy = discord.File(fp=open(filename, "rb"))
+#     send = f"Here's your '{genprompt}'!\nGeneration took about {timer} seconds."
+#     if retried:
+#         send += "\n\nP.S., you can use the `!redo` command to retry the last image."
+
+#     await msg.channel.send(content=send, file=piccy)
+
+#     if msg.channel.id in chat_memories.keys():
+#         record = "Image requested by " + msg.author.name + ': "' + genprompt + '"'
+#         chat_memories[msg.channel.id].add(record)
+#         print(chat_memories[msg.channel.id].get())
+
+@isNotClient()
+@app_commands.command(name="image", description="Generate an image from a prompt.")
+@app_commands.describe(prompt="image prompt")
+@app_commands.check(serverAllowedImage)
+async def image(interaction: discord.Interaction, msg: discord.Message):
+    print(interaction.data)
+    return
 
 client.run(TOKEN)

@@ -313,12 +313,16 @@ async def on_message(message: discord.Message):
                 if com == "prompt":  # show ai's prompt
                     if fullprompt == "":
                         if idh in chat_channel_ids:
-                            await message.channel.send(content=f"```{ai_pre_msg}```")
+                            if len(ai_pre_msg) > 1700:
+                                chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
+                            await message.channel.send(content=f"```{chunk}```")
                         elif idh in mark_channel_ids:
                             await message.channel.send(content=f"```{mark_pre_msg}```")
                     elif fullprompt == "reset":
                         ai_pre_msg = ai_preface + helpful_preface_end
-                        await message.channel.send(content=f"Prompt was reset.\n```{ai_preface}```")
+                        if len(ai_pre_msg) > 1700:
+                            chunk = ai_preface[:1700] + "\n[truncated due to Discord character limit]"
+                        await message.channel.send(content=f"Prompt was reset.\n```{chunk}```")
                         await message.channel.send(
                             content="i forgor :skull:\nChat memory has been cleared."
                         )
@@ -326,7 +330,9 @@ async def on_message(message: discord.Message):
                         chat_memories[idh].add(ai_pre_msg, ai_nomem)
                     else:
                         ai_pre_msg = fullprompt
-                        await message.channel.send(content=f"Prompt was changed.\n```{fullprompt}```")
+                        if len(ai_pre_msg) > 1700:
+                            chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
+                        await message.channel.send(content=f"Prompt was changed.\n```{chunk}```")
                         await message.channel.send(
                             content="i forgor :skull:\nChat memory has been cleared."
                         )

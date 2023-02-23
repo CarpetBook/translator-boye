@@ -375,7 +375,7 @@ async def on_message(message: discord.Message):
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif idh in chat_channel_ids:
             ops = server_options.get(message.guild.id, None)
-            if ops is None:
+            if ops is not None:
                 prefix = ops["chat_prefix"]
             if ops["disabled"] is True:
                 return

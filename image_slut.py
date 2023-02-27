@@ -1,4 +1,3 @@
-import time
 import discord
 import openai
 import json

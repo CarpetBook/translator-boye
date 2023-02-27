@@ -10,12 +10,17 @@ class ChatMemory:
         self.tokens = 0
         self.min_message_limit = min_message_limit
         self.max_tokens = max_tokens
+        self.name = "AI"
 
     def add(self, *message):
         for i in message:
             self.memory.append((time.time(), i))
         self.count_tokens()
         self.clean()
+        return self
+
+    def changename(self, name):
+        self.name = name
         return self
 
     def construct(self, list=False):

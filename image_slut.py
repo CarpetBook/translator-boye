@@ -63,6 +63,8 @@ image_memories = {}
 ai_pre_msg = ""
 mark_pre_msg = ""
 
+ai_name = "AI"
+
 polite = True
 # puppet = False
 # human = False
@@ -127,39 +129,36 @@ async def textwithmem(
 ):
     yewser = msg.author.name
     max = 0
-    freq_pen = 0.75
-    presence_pen = 0.75
-    temp = 0.7
+    freq_pen = 0
+    presence_pen = 0
+    temp = 0.75
     chatformatting = True
 
     if altmodel == "davinki":
         altmodel = "text-davinci-003"
         max = 512
-        chatformatting = True
-        temp = 1.0
-    if altmodel == "davinki-01":
-        altmodel = "davinci"
-        max = 256
-        freq_pen = 0.5
-        temp = 0.7
-    elif altmodel == "curie":
-        altmodel = "text-curie-001"
-        max = 512
-        chatformatting = True
-    elif altmodel == "ada":
-        altmodel = "ada"
-        max = 128
-        chatformatting = False
-        freq_pen = 1.0
+    #     chatformatting = True
+    #     temp = 1.0
+    # if altmodel == "davinki-01":
+    #     altmodel = "davinci"
+    #     max = 256
+    #     freq_pen = 0.5
+    #     temp = 0.7
+    # elif altmodel == "curie":
+    #     altmodel = "text-curie-001"
+    #     max = 512
+    #     chatformatting = True
+    # elif altmodel == "ada":
+    #     altmodel = "ada"
+    #     max = 128
+    #     chatformatting = False
+    #     freq_pen = 1.0
 
     # preface = ai_pre_msg
-    ai_name = "AI"
 
-    ai_name = "You"
-
-    if mark:
-        # preface = mark_pre_msg
-        ai_name = "Mark"
+    # if mark:
+    #     # preface = mark_pre_msg
+    #     ai_name = "Mark"
 
     try:
         if genprompt[len(genprompt) - 1] == " ":
@@ -169,7 +168,7 @@ async def textwithmem(
         # print(fullprom)
         if chatformatting:
             fullprom = fullprom + f"{yewser}: {genprompt}"
-            fullprom = fullprom + "\n"
+            fullprom = fullprom + f"\n{ai_name}:"
 
         print(text.tokenize(fullprom)["count"])
 
@@ -199,7 +198,7 @@ async def textwithmem(
         if chatformatting:
             generation = generation + "\n"
 
-        chat_memories[msg.channel.id].add(generation)
+        chat_memories[msg.channel.id].add(f"{ai_name}: {generation}")
         # print(chatarrays[msg.channel.id])
 
         return 0  # ok
@@ -222,6 +221,7 @@ async def on_ready():
 async def on_message(message: discord.Message):
     global token_thresh
     global ai_pre_msg
+    global ai_name
 
     idh = message.channel.id
 
@@ -313,6 +313,7 @@ async def on_message(message: discord.Message):
                 if com == "prompt":  # show ai's prompt
                     if fullprompt == "":
                         if idh in chat_channel_ids:
+                            chunk = ai_pre_msg
                             if len(ai_pre_msg) > 1700:
                                 chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
                             await message.channel.send(content=f"```{chunk}```")
@@ -330,6 +331,7 @@ async def on_message(message: discord.Message):
                         chat_memories[idh].add(ai_pre_msg, ai_nomem)
                     else:
                         ai_pre_msg = fullprompt
+                        chunk = ai_pre_msg
                         if len(ai_pre_msg) > 1700:
                             chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
                         await message.channel.send(content=f"Prompt was changed.\n```{chunk}```")
@@ -374,6 +376,16 @@ async def on_message(message: discord.Message):
                             content="Token limit must be a **number** between 200 and 4000."
                         )
 
+                if com == "name":
+                    if fullprompt == "":
+                        await message.channel.send(
+                            content=f"Current name is {ai_name}."
+                        )
+                        return
+                    ai_name = fullprompt
+                    await message.channel.send(
+                        content=f"New name is {ai_name}."
+                    )
                 # if com == "start":
 
         # elif message.channel.id == 1053216521020772372:
@@ -381,11 +393,11 @@ async def on_message(message: discord.Message):
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif idh in chat_channel_ids:
             ops = server_options.get(message.guild.id, None)
-            if ops is not None:
-                prefix = ops["chat_prefix"]
-            if ops["disabled"] is True:
-                return
-            if message.content.startswith(prefix):
+            # if ops is not None:
+            #     prefix = ops["chat_prefix"]
+            # if ops["disabled"] is True:
+            #     return
+            if message.content.startswith("="):
                 async with message.channel.typing():
                     ret = await textwithmem(message, genprompt=orig[1:])
                     tries = 0

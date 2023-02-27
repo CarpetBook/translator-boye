@@ -1,4 +1,3 @@
-import time
 import discord
 from discord import app_commands
 import openai
@@ -39,7 +38,11 @@ server_options = {}
 with open("keys.json") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
-    TOKEN = wee["discord_token"]
+    # TOKEN = wee["discord_token"]
+    TOKEN = "MTA3NzY4MTQ4MTIyMjIwMTM1NA.GWMfBn.brY5jQbK_4BKi0HQoaFz-7cX5KswqNqOZL73Ro"
+    #
+    #   REMOVE THIS REMOVE THIS REMOVE THIS before uploading to github... this is translator boye's token and is only for testing
+    #
 
 with open("settings.json") as setty:
     the = json.load(setty)
@@ -57,7 +60,10 @@ def save_settings():
 botintents = discord.Intents(messages=True, message_content=True)
 activity = discord.Activity(name="for your questions", type=discord.ActivityType.watching)
 client = discord.Client(intents=botintents, activity=activity)
+tree = app_commands.CommandTree(client)
 
+async def yeah():
+    await tree.sync(guild=discord.Object(id=1072352297503440936))
 
 chat_memories = {}
 image_memories = {}
@@ -244,6 +250,11 @@ async def on_message(message: discord.Message):
                 print("command: ", com)
                 print("fullprompt: ", fullprompt)
 
+                if com == "sync":
+                    tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+                    await tree.sync(guild=discord.Object(id=848149296054272000))
+                    return
+
                 if com == "image":  # generate image
                     if ops is not None and ops["allow_images"] is False:
                         await message.channel.send(
@@ -409,16 +420,24 @@ def isNotClient():
 
 
 def serverKnown(guild_id):
+    print(guild_id)
+    print(guild_id in server_options)
     return guild_id in server_options
 
 
 def serverAllowedChat(interaction: discord.Interaction):
-    ids = interaction.guild.id
+    ids = str(interaction.guild.id)
+    print(ids)
+    print(serverKnown(ids))
+    print(server_options[ids]["allow_images"])
     return serverKnown(ids) and server_options[ids]["can_chat"]
 
 
 def serverAllowedImage(interaction: discord.Interaction):
-    ids = interaction.guild.id
+    ids = str(interaction.guild.id)
+    print(ids)
+    print(serverKnown(ids))
+    print(server_options[ids]["allow_images"])
     return serverKnown(ids) and server_options[ids]["allow_images"]
 
 
@@ -449,11 +468,48 @@ def serverAllowedImage(interaction: discord.Interaction):
 #         print(chat_memories[msg.channel.id].get())
 
 @isNotClient()
-@app_commands.command(name="image", description="Generate an image from a prompt.")
+@tree.command(guild=discord.Object(id=848149296054272000), name="image", description="Use DALL-E 2 to generate an image from a prompt.")
 @app_commands.describe(prompt="image prompt")
 @app_commands.check(serverAllowedImage)
-async def image(interaction: discord.Interaction, msg: discord.Message):
+async def ImageCommand(interaction: discord.Interaction, prompt: str):
     print(interaction.data)
+    await interaction.response.defer(thinking=True)  # wait to think
+    res = await images.genpic(prompt)
+    if res[0] == "fail":
+        await interaction.followup.send(res[1])  # send the bare error message...
+        return
+    else:
+        filename = res[1]  # parts of a tuple
+        timer = res[2]
+
+    piccy = discord.File(fp=open(filename, "rb"), filename=f"{prompt}.png")
+    send = f"Here's your '{prompt}'!\nGeneration took about {timer} seconds."
+
+    await interaction.followup.send(content=send, file=piccy)
     return
+
+
+@isNotClient()
+@tree.command(guild=discord.Object(id=848149296054272000), name="text", description="Use GPT-3 Davinci to generate text from a prompt.")
+@app_commands.describe(prompt="text prompt")
+@app_commands.check(serverAllowedChat)
+async def TextCommand(interaction: discord.Interaction, prompt: str):
+    await interaction.response.defer(thinking=True)
+    res = await text.gentext(prompt)
+    if res[0] == "fail":
+        await interaction.response.send(res[1])
+        return
+    else:
+        khan_tent = res[1]
+
+    await interaction.followup.send(content=khan_tent)
+
+
+@tree.error
+async def command_error(interaction: discord.Interaction, error):
+    print(error)
+    await interaction.followup.send(content=f"Something went wrong. Please try again later.\n`{str(error)}`")
+    return
+
 
 client.run(TOKEN)

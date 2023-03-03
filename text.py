@@ -70,3 +70,13 @@ def prettyprintingtokens(text: str, op="history") -> str:
 
 def randomtokens(numtokens):
     return tokenizer.decode(random.choices(range(50257), k=numtokens))
+
+
+def compressChr(text):
+    tokens = tokenizer.encode(text)
+    return "".join([chr(i) for i in tokens])
+
+
+def decompressChr(text):
+    tokens = [ord(i) for i in text]
+    return tokenizer.decode(tokens)

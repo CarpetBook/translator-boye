@@ -404,6 +404,24 @@ async def on_message(message: discord.Message):
                         puke = puke[:2000]
                     await message.channel.send(content=puke)
 
+                if com == "compress":
+                    if fullprompt == "":
+                        await message.channel.send(
+                            content="No text to compress."
+                        )
+                        return
+                    res = text.compressChr(fullprompt)
+                    await message.channel.send(content=res)
+
+                if com == "decompress":
+                    if fullprompt == "":
+                        await message.channel.send(
+                            content="No text to decompress."
+                        )
+                        return
+                    res = text.decompressChr(fullprompt)
+                    await message.channel.send(content=res)
+
         # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():
         #         await textwithmem(message, genprompt=orig, altmodel="ada")

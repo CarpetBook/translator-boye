@@ -1,4 +1,5 @@
 import openai
+import random
 from transformers import GPT2TokenizerFast
 
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
@@ -65,3 +66,7 @@ def prettyprintingtokens(text: str, op="history") -> str:
         )
 
     return pretty
+
+
+def randomtokens(numtokens):
+    return tokenizer.decode(random.choices(range(50257), k=numtokens))

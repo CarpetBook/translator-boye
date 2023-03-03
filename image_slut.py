@@ -7,6 +7,8 @@ from memory import ChatMemory
 
 ai_nomem = """So far, there has been no chat history and no discussion."""
 
+ai_nomem = ""
+
 ai_preface = """You are chatting with humans. The user's messages are prefaced with the user's username."""
 
 human_preface = """You're talking with people online. Your name is Mark. \
@@ -386,6 +388,21 @@ async def on_message(message: discord.Message):
                         content=f"New name is {ai_name}."
                     )
                 # if com == "start":
+
+                if com == "tokenpuke":
+                    num = 32
+                    if fullprompt != "":
+                        try:
+                            num = int(fullprompt)
+                        except ValueError:
+                            await message.channel.send(
+                                content="Must be a number."
+                            )
+                            return
+                    puke = text.randomtokens(num)
+                    if len(puke) > 2000:
+                        puke = puke[:2000]
+                    await message.channel.send(content=puke)
 
         # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():

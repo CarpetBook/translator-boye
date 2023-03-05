@@ -40,11 +40,8 @@ server_options = {}
 with open("keys.json") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
-    # TOKEN = wee["discord_token"]
-    TOKEN = "MTA3NzY4MTQ4MTIyMjIwMTM1NA.GWMfBn.brY5jQbK_4BKi0HQoaFz-7cX5KswqNqOZL73Ro"
-    #
-    #   REMOVE THIS REMOVE THIS REMOVE THIS before uploading to github... this is translator boye's token and is only for testing
-    #
+    TOKEN = wee["discord_token"]
+
 
 with open("settings.json") as setty:
     the = json.load(setty)

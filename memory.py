@@ -7,6 +7,7 @@ import text
 class ChatMemory:
     def __init__(self, min_message_limit=15, max_tokens=1024):
         self.memory = []
+        self.prompt = ""
         self.tokens = 0
         self.min_message_limit = min_message_limit
         self.max_tokens = max_tokens
@@ -60,21 +61,25 @@ class ChatMemory:
     def get(self):
         return self.memory
 
-
-class Memory:
-    def __init__(self):
-        self.memory = []
-
-    def add(self, user, *content):
-        for i in content:
-            self.memory.append((time.time(), user, i))
-            print("added to memory: " + str((time.time(), user, i)))
-            print(self.memory)
+    def setprompt(self, newprompt):
+        self.prompt = newprompt
         return self
 
-    def pop(self):
-        return self.memory.pop()
 
-    def clear(self):
-        self.memory = []
-        return self
+# class Memory:
+#     def __init__(self):
+#         self.memory = []
+
+#     def add(self, user, *content):
+#         for i in content:
+#             self.memory.append((time.time(), user, i))
+#             print("added to memory: " + str((time.time(), user, i)))
+#             print(self.memory)
+#         return self
+
+#     def pop(self):
+#         return self.memory.pop()
+
+#     def clear(self):
+#         self.memory = []
+#         return self

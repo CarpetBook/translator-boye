@@ -10,6 +10,8 @@ ai_nomem = """So far, there has been no chat history and no discussion."""
 
 ai_nomem = ""
 
+deprecationsoon = "Please start using the new slash commands. '!' commands will be removed soon."
+
 ai_preface = """You are chatting with humans. The user's messages are prefaced with the user's username."""
 
 human_preface = """You're talking with people online. Your name is Mark. \
@@ -86,12 +88,12 @@ mark_pre_msg = " ".join([human_preface, puppet_preface_end])
 for idx in chat_channel_ids:
     chat_memories[idx] = ChatMemory(max_tokens=def_token_thresh).add(
         ai_pre_msg, ai_nomem
-    )
+    ).setprompt(ai_pre_msg)
 
 for mdx in mark_channel_ids:
     chat_memories[mdx] = ChatMemory(max_tokens=def_token_thresh).add(
         mark_pre_msg, "Mark: Hey, baby. How are you tonight?"
-    )
+    ).setprompt(mark_pre_msg)
 
 
 async def sendtext(msg, genprompt):
@@ -261,6 +263,7 @@ async def on_message(message: discord.Message):
                     return
 
                 if com == "image":  # generate image
+                    await message.channel.send(content=deprecationsoon)
                     if ops is not None and ops["allow_images"] is False:
                         await message.channel.send(
                             content="Sorry, image generation is disabled on this server."
@@ -307,10 +310,12 @@ async def on_message(message: discord.Message):
                             await message.channel.send(content=f"{res[1]}")
 
                 if com == "text":  # generate text
+                    await message.channel.send(content=deprecationsoon)
                     await sendtext(message, genprompt=fullprompt)
                     return
 
                 if com == "clear":  # clear chat history
+                    await message.channel.send(content=deprecationsoon)
                     await message.channel.send(
                         content="i forgor :skull:\nChat memory has been cleared."
                     )
@@ -328,6 +333,7 @@ async def on_message(message: discord.Message):
                     return
 
                 if com == "prompt":  # show ai's prompt
+                    await message.channel.send(content=deprecationsoon)
                     if fullprompt == "":
                         if idh in chat_channel_ids:
                             chunk = ai_pre_msg
@@ -586,19 +592,31 @@ async def ClearCommand(interaction: discord.Interaction):
 
 
 @tree.command(name="prompt", description="Set the chat prompt for this channel and clear the history.")
-@app_commands.describe(prompt="chat prompt")
-async def PromptCommand(interaction: discord.Interaction, prompt: str):
+@app_commands.describe(prompt="chat prompt (leave empty to show current prompt)")
+async def PromptCommand(interaction: discord.Interaction, prompt: str = None):
     channelid = interaction.channel_id
+
+    if channelid not in chat_channel_ids:
+        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        return
+
+    curprompt = chat_memories[channelid].prompt \
+        if len(chat_memories[channelid].prompt) < 1900 \
+        else chat_memories[channelid].prompt[:1900] + "..."
+
     if channelid is None:
         await interaction.response.send_message(content="Something bad happened.")
         return
-    if channelid in chat_channel_ids:
-        chat_memories[interaction.channel_id].setprompt(prompt)
-        chat_memories[channelid].clear()
-        chat_memories[channelid].add(chat_memories[channelid].prompt)
-        await interaction.response.send_message(content=f"Prompt set to '{prompt}'")
-    else:
-        await interaction.response.send_message(content="Current channel is not a chat channel.")
+    if prompt is None:
+        await interaction.response.send_message(content=f"```{curprompt}```")
+        return
+
+    chat_memories[interaction.channel_id].setprompt(prompt)
+    chat_memories[channelid].clear()
+    chat_memories[channelid].add(chat_memories[channelid].prompt)
+
+    await interaction.response.send_message(content=f"Prompt changed.\n```{prompt}```")
+
     return
 
 

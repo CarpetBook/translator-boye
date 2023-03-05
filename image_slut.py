@@ -571,8 +571,8 @@ async def TextCommand(interaction: discord.Interaction, prompt: str):
 
 
 @tree.command(name="clear", description="Clear the chat history for this channel.")
-async def ClearCommand(interaction=None, channelid=None):  # interaction is not defined as a discord.Interaction because it can be null
-    channelid = interaction.channel_id if interaction is not None else channelid
+async def ClearCommand(interaction: discord.Interaction):
+    channelid = interaction.channel_id
     if channelid is None:
         await interaction.response.send_message(content="Something bad happened.")
         return
@@ -588,8 +588,14 @@ async def ClearCommand(interaction=None, channelid=None):  # interaction is not 
 @tree.command(name="prompt", description="Set the chat prompt for this channel and clear the history.")
 @app_commands.describe(prompt="chat prompt")
 async def PromptCommand(interaction: discord.Interaction, prompt: str):
-    if interaction.channel_id in chat_channel_ids:
+    channelid = interaction.channel_id
+    if channelid is None:
+        await interaction.response.send_message(content="Something bad happened.")
+        return
+    if channelid in chat_channel_ids:
         chat_memories[interaction.channel_id].setprompt(prompt)
+        chat_memories[channelid].clear()
+        chat_memories[channelid].add(chat_memories[channelid].prompt)
         await interaction.response.send_message(content=f"Prompt set to '{prompt}'")
     else:
         await interaction.response.send_message(content="Current channel is not a chat channel.")

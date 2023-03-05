@@ -1,4 +1,5 @@
 import openai
+import random
 from transformers import GPT2TokenizerFast
 
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
@@ -65,3 +66,19 @@ def prettyprintingtokens(text: str, op="history") -> str:
         )
 
     return pretty
+
+
+def randomtokens(numtokens):
+    return tokenizer.decode(random.choices(range(50257), k=numtokens))
+
+
+def compressChr(text):
+    text = text.replace(".", "<|endoftext|>")
+    tokens = tokenizer.encode(text)
+    return "".join([chr(i) for i in tokens])
+
+
+def decompressChr(text):
+    tokens = [ord(i) for i in text]
+    text = tokenizer.decode(tokens)
+    return text.replace("<|endoftext|>", ".")

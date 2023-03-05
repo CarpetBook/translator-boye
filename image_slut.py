@@ -634,6 +634,11 @@ async def SetChatCommand(interaction: discord.Interaction):
     return
 
 
+@tree.command(name="die", description="Dies.")
+async def DieFunny(interaction: discord.Interaction):
+    await interaction.response.send_message(content=":skull:")
+    return
+
 # not even sure if this guy works at all
 @TextCommand.error
 async def command_error(interaction: discord.Interaction, error):

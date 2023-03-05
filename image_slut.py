@@ -257,6 +257,7 @@ async def on_message(message: discord.Message):
                 if com == "sync":
                     tree.copy_global_to(guild=discord.Object(id=848149296054272000))
                     await tree.sync(guild=discord.Object(id=848149296054272000))
+                    await tree.sync()
                     return
 
                 if com == "image":  # generate image
@@ -530,7 +531,7 @@ def serverAllowedImage(interaction: discord.Interaction):
 # or i just can't figure out how to use them, idk, either way it's a waste of my time to try
 # to figure it out and i'm just gonna do it the lazy way for all of them
 
-@tree.command(guild=discord.Object(id=848149296054272000), name="image", description="Use DALL-E 2 to generate an image from a prompt.")
+@tree.command(name="image", description="Use DALL-E 2 to generate an image from a prompt.")
 @app_commands.describe(prompt="image prompt")
 async def ImageCommand(interaction: discord.Interaction, prompt: str):
     if not serverAllowedImage(interaction):
@@ -552,7 +553,7 @@ async def ImageCommand(interaction: discord.Interaction, prompt: str):
     return
 
 
-@tree.command(guild=discord.Object(id=848149296054272000), name="text", description="Use GPT-3 Davinci to generate text from a prompt.")
+@tree.command(name="text", description="Use GPT-3 Davinci to generate text from a prompt.")
 @app_commands.describe(prompt="text prompt")
 async def TextCommand(interaction: discord.Interaction, prompt: str):
     if not serverAllowedChat(interaction):
@@ -569,31 +570,33 @@ async def TextCommand(interaction: discord.Interaction, prompt: str):
     await interaction.followup.send(content=khan_tent)
 
 
-@tree.command(guild=discord.Object(id=848149296054272000), name="clear", description="Clear the chat history for this channel.")
-async def ClearCommand(interaction: discord.Interaction):
-    print(interaction.channel_id)
-    print(interaction.channel_id in chat_channel_ids)
-    print(chat_channel_ids)
-    if interaction.channel_id in chat_channel_ids:
-        chat_memories[interaction.channel_id].clear()
+@tree.command(name="clear", description="Clear the chat history for this channel.")
+async def ClearCommand(interaction=None, channelid=None):  # interaction is not defined as a discord.Interaction because it can be null
+    channelid = interaction.channel_id if interaction is not None else channelid
+    if channelid is None:
+        await interaction.response.send_message(content="Something bad happened.")
+        return
+    if channelid in chat_channel_ids:
+        chat_memories[channelid].clear()
+        chat_memories[channelid].add(chat_memories[channelid].prompt)
         await interaction.response.send_message(content="i forgor :skull:\nChat memory has been cleared.")
     else:
         await interaction.response.send_message(content="Current channel is not a chat channel.")
     return
 
 
-@tree.command(guild=discord.Object(id=848149296054272000), name="prompt", description="Set the chat prompt for this channel and clear the history.")
+@tree.command(name="prompt", description="Set the chat prompt for this channel and clear the history.")
 @app_commands.describe(prompt="chat prompt")
 async def PromptCommand(interaction: discord.Interaction, prompt: str):
     if interaction.channel_id in chat_channel_ids:
-        chat_memories[interaction.channel_id].set(prompt)
+        chat_memories[interaction.channel_id].setprompt(prompt)
         await interaction.response.send_message(content=f"Prompt set to '{prompt}'")
     else:
         await interaction.response.send_message(content="Current channel is not a chat channel.")
     return
 
 
-@tree.command(guild=discord.Object(id=848149296054272000), name="setchat", description="Make this channel a chat channel.")
+@tree.command(name="setchat", description="Make this channel a chat channel.")
 async def SetChatCommand(interaction: discord.Interaction):
     if interaction.channel_id in chat_channel_ids:
         await interaction.response.send_message(content="This channel is already a chat channel.")

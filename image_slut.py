@@ -54,13 +54,15 @@ with open("settings.json") as setty:
 
 def save_settings():
     with open("settings.json", "w") as savey:
-        savey.write(json.dumps(server_options))
+        the = {"chat_channels": chat_channel_ids, "mark_channels": mark_channel_ids, "server_options": server_options}
+        savey.write(json.dumps(the, indent=4))
 
 
 botintents = discord.Intents(messages=True, message_content=True)
 activity = discord.Activity(name="for your questions", type=discord.ActivityType.watching)
 client = discord.Client(intents=botintents, activity=activity)
 tree = app_commands.CommandTree(client)
+
 
 async def yeah():
     await tree.sync(guild=discord.Object(id=1072352297503440936))
@@ -160,13 +162,13 @@ async def textwithmem(
         freq_pen = 1.0
 
     # preface = ai_pre_msg
-    ai_name = "AI"
+    # ai_name = "AI"
 
-    ai_name = "You"
+    # ai_name = "You"
 
-    if mark:
-        # preface = mark_pre_msg
-        ai_name = "Mark"
+    # if mark:
+    #     # preface = mark_pre_msg
+    #     ai_name = "Mark"
 
     try:
         if genprompt[len(genprompt) - 1] == " ":
@@ -386,21 +388,24 @@ async def on_message(message: discord.Message):
         #     async with message.channel.typing():
         #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif idh in chat_channel_ids:
-            ops = server_options.get(message.guild.id, None)
-            if ops is None:
+            # message.guild.id has to be string bc json won't accept int as key/property name
+            ops = server_options.get(str(message.guild.id), None)
+            if ops is not None:
                 prefix = ops["chat_prefix"]
             if not ops["can_chat"]:
                 return
-            if message.content.startswith(prefix):
+            if prefix is None or message.content.startswith(prefix):
                 async with message.channel.typing():
-                    ret = await textwithmem(message, genprompt=orig[1:])
+                    if prefix is not None:
+                        orig = orig[len(prefix):]  # remove prefix
+                    ret = await textwithmem(message, genprompt=orig)
                     tries = 0
                     if ret != 0:
                         tries += 1
                         if tries > 3:
                             await message.channel.reply(content="Sorry, something's wrong. I tried three times, and they all gave errors. You may have to try again later, or contact hako.")
                             return
-                        await textwithmem(message, genprompt=orig[1:])
+                        await textwithmem(message, genprompt=orig)
         elif idh in mark_channel_ids:
             async with message.channel.typing():
                 await textwithmem(message, genprompt=orig, mark=True)
@@ -467,12 +472,17 @@ def serverAllowedImage(interaction: discord.Interaction):
 #         chat_memories[msg.channel.id].add(record)
 #         print(chat_memories[msg.channel.id].get())
 
-@isNotClient()
+
+# NOT using command checks, because they're not very well documented for interactions right now,
+# or i just can't figure out how to use them, idk, either way it's a waste of my time to try
+# to figure it out and i'm just gonna do it the lazy way for all of them
+
 @tree.command(guild=discord.Object(id=848149296054272000), name="image", description="Use DALL-E 2 to generate an image from a prompt.")
 @app_commands.describe(prompt="image prompt")
-@app_commands.check(serverAllowedImage)
 async def ImageCommand(interaction: discord.Interaction, prompt: str):
-    print(interaction.data)
+    if not serverAllowedImage(interaction):
+        await interaction.response.send_message("Sorry, this server has disabled image generation.")
+        return
     await interaction.response.defer(thinking=True)  # wait to think
     res = await images.genpic(prompt)
     if res[0] == "fail":
@@ -489,11 +499,12 @@ async def ImageCommand(interaction: discord.Interaction, prompt: str):
     return
 
 
-@isNotClient()
 @tree.command(guild=discord.Object(id=848149296054272000), name="text", description="Use GPT-3 Davinci to generate text from a prompt.")
 @app_commands.describe(prompt="text prompt")
-@app_commands.check(serverAllowedChat)
 async def TextCommand(interaction: discord.Interaction, prompt: str):
+    if not serverAllowedChat(interaction):
+        await interaction.response.send_message("Sorry, this server has disabled text generation.")
+        return
     await interaction.response.defer(thinking=True)
     res = await text.gentext(prompt)
     if res[0] == "fail":
@@ -505,7 +516,46 @@ async def TextCommand(interaction: discord.Interaction, prompt: str):
     await interaction.followup.send(content=khan_tent)
 
 
-@tree.error
+@tree.command(guild=discord.Object(id=848149296054272000), name="clear", description="Clear the chat history for this channel.")
+async def ClearCommand(interaction: discord.Interaction):
+    print(interaction.channel_id)
+    print(interaction.channel_id in chat_channel_ids)
+    print(chat_channel_ids)
+    if interaction.channel_id in chat_channel_ids:
+        chat_memories[interaction.channel_id].clear()
+        await interaction.response.send_message(content="i forgor :skull:\nChat memory has been cleared.")
+    else:
+        await interaction.response.send_message(content="Current channel is not a chat channel.")
+    return
+
+
+@tree.command(guild=discord.Object(id=848149296054272000), name="prompt", description="Set the chat prompt for this channel and clear the history.")
+@app_commands.describe(prompt="chat prompt")
+async def PromptCommand(interaction: discord.Interaction, prompt: str):
+    if interaction.channel_id in chat_channel_ids:
+        chat_memories[interaction.channel_id].set(prompt)
+        await interaction.response.send_message(content=f"Prompt set to '{prompt}'")
+    else:
+        await interaction.response.send_message(content="Current channel is not a chat channel.")
+    return
+
+
+@tree.command(guild=discord.Object(id=848149296054272000), name="setchat", description="Make this channel a chat channel.")
+async def SetChatCommand(interaction: discord.Interaction):
+    if interaction.channel_id in chat_channel_ids:
+        await interaction.response.send_message(content="This channel is already a chat channel.")
+        return
+    chat_memories[interaction.channel_id] = ChatMemory(max_tokens=def_token_thresh).add(
+        ai_pre_msg, ai_nomem
+    )
+    chat_channel_ids.append(interaction.channel_id)
+    save_settings()
+    await interaction.response.send_message(content="This channel is now a chat channel.")
+    return
+
+
+# not even sure if this guy works at all
+@TextCommand.error
 async def command_error(interaction: discord.Interaction, error):
     print(error)
     await interaction.followup.send(content=f"Something went wrong. Please try again later.\n`{str(error)}`")

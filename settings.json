@@ -2,6 +2,7 @@
 	"chat_channels": [
 		1072352297503440936,
 		1052918701663461396,
+		1052918672009744414,
 		1072354381271404675
 	],
 	"mark_channels": [
@@ -12,7 +13,7 @@
 			"name": "ufsih",
 			"allow_images": true,
 			"can_chat": true,
-			"chat_prefix": ""
+			"chat_prefix": null
 		},
 		"1072352297503440936": {
 			"name": "hunm",

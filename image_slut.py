@@ -411,7 +411,7 @@ async def on_message(message: discord.Message):
                         )
                         return
                     res = text.compressChr(fullprompt)
-                    await message.channel.send(content=res)
+                    await message.channel.send(content=f"```{res}```")
 
                 if com == "decompress":
                     if fullprompt == "":
@@ -420,7 +420,7 @@ async def on_message(message: discord.Message):
                         )
                         return
                     res = text.decompressChr(fullprompt)
-                    await message.channel.send(content=res)
+                    await message.channel.send(content=f"```{res}```")
 
         # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():

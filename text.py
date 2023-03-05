@@ -73,10 +73,12 @@ def randomtokens(numtokens):
 
 
 def compressChr(text):
+    text = text.replace(".", "<|endoftext|>")
     tokens = tokenizer.encode(text)
     return "".join([chr(i) for i in tokens])
 
 
 def decompressChr(text):
     tokens = [ord(i) for i in text]
-    return tokenizer.decode(tokens)
+    text = tokenizer.decode(tokens)
+    return text.replace("<|endoftext|>", ".")

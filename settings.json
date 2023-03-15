@@ -19,7 +19,7 @@
 			"name": "hunm",
 			"allow_images": true,
 			"can_chat": true,
-			"chat_prefix": "="
+			"chat_prefix": "-"
 		}
 	}
 }

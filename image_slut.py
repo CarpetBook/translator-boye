@@ -211,7 +211,9 @@ async def on_message(message: discord.Message):
 
                 if com == "sync":
                     tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+                    tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
                     await tree.sync(guild=discord.Object(id=848149296054272000))
+                    await tree.sync(guild=discord.Object(id=1072352297503440936))
                     await tree.sync()
                     return
 
@@ -456,44 +458,6 @@ def serverAllowedImage(interaction: discord.Interaction):
 # or i just can't figure out how to use them, idk, either way it's a waste of my time to try
 # to figure it out and i'm just gonna do it the lazy way for all of them
 
-@tree.command(name="image", description="Use DALL-E 2 to generate an image from a prompt.")
-@app_commands.describe(prompt="image prompt")
-async def ImageCommand(interaction: discord.Interaction, prompt: str):
-    if not serverAllowedImage(interaction):
-        await interaction.response.send_message("Sorry, this server has disabled image generation.")
-        return
-    await interaction.response.defer(thinking=True)  # wait to think
-    res = await images.genpic(prompt)
-    if res[0] == "fail":
-        await interaction.followup.send(res[1])  # send the bare error message...
-        return
-    else:
-        filename = res[1]  # parts of a tuple
-        timer = res[2]
-
-    piccy = discord.File(fp=open(filename, "rb"), filename=f"{prompt}.png")
-    send = f"Here's your '{prompt}'!\nGeneration took about {timer} seconds."
-
-    await interaction.followup.send(content=send, file=piccy)
-    return
-
-
-@tree.command(name="text", description="Use GPT-3 Davinci to generate text from a prompt.")
-@app_commands.describe(prompt="text prompt")
-async def TextCommand(interaction: discord.Interaction, prompt: str):
-    if not serverAllowedChat(interaction):
-        await interaction.response.send_message("Sorry, this server has disabled text generation.")
-        return
-    await interaction.response.defer(thinking=True)
-    res = await text.gentext(prompt)
-    if res[0] == "fail":
-        await interaction.response.send(res[1])
-        return
-    else:
-        khan_tent = res[1]
-
-    await interaction.followup.send(content=khan_tent)
-
 
 @tree.command(name="clear", description="Clear the chat history for this channel.")
 async def ClearCommand(interaction: discord.Interaction):
@@ -503,39 +467,9 @@ async def ClearCommand(interaction: discord.Interaction):
         return
     if channelid in chat_channel_ids:
         chat_memories[channelid].clear()
-        chat_memories[channelid].add(chat_memories[channelid].prompt)
         await interaction.response.send_message(content="i forgor :skull:\nChat memory has been cleared.")
     else:
         await interaction.response.send_message(content="Current channel is not a chat channel.")
-    return
-
-
-@tree.command(name="prompt", description="Set the chat prompt for this channel and clear the history.")
-@app_commands.describe(prompt="chat prompt (leave empty to show current prompt)")
-async def PromptCommand(interaction: discord.Interaction, prompt: str = None):
-    channelid = interaction.channel_id
-
-    if channelid not in chat_channel_ids:
-        await interaction.response.send_message(content="Current channel is not a chat channel.")
-        return
-
-    curprompt = chat_memories[channelid].prompt \
-        if len(chat_memories[channelid].prompt) < 1900 \
-        else chat_memories[channelid].prompt[:1900] + "..."
-
-    if channelid is None:
-        await interaction.response.send_message(content="Something bad happened.")
-        return
-    if prompt is None:
-        await interaction.response.send_message(content=f"```{curprompt}```")
-        return
-
-    chat_memories[interaction.channel_id].setprompt(prompt)
-    chat_memories[channelid].clear()
-    chat_memories[channelid].add(chat_memories[channelid].prompt)
-
-    await interaction.response.send_message(content=f"Prompt changed.\n```{prompt}```")
-
     return
 
 
@@ -562,10 +496,15 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
         return
 
     if prompt is None:
+        if chat_memories[channelid].system is not None:
+            await interaction.response.send_message(content=f"```{chat_memories[channelid].system}```")
+            return
         await interaction.response.send_message(content="No system prompt set.")
         return
 
     chat_memories[channelid].setsystem(prompt)
+    if len(prompt) > 1900:
+        prompt = prompt[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
     await interaction.response.send_message(content=f"System message changed.\n```{prompt}```\nMemory cleared.")
@@ -582,27 +521,18 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
         return
 
     if starter is None:
+        if chat_memories[channelid].starter is not None:
+            await interaction.response.send_message(content=f"```{chat_memories[channelid].starter}```")
+            return
         await interaction.response.send_message(content="No starter message set.")
         return
 
     chat_memories[channelid].setstarter(starter)
+    if len(starter) > 1900:
+        starter = starter[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
     await interaction.response.send_message(content=f"Starter message changed.\n```{starter}```")
-    return
-
-
-@tree.command(name="die", description="Dies.")
-async def DieFunny(interaction: discord.Interaction):
-    await interaction.response.send_message(content=":skull:")
-    return
-
-
-# not even sure if this guy works at all
-@TextCommand.error
-async def command_error(interaction: discord.Interaction, error):
-    print(error)
-    await interaction.followup.send(content=f"Something went wrong. Please try again later.\n`{str(error)}`")
     return
 
 

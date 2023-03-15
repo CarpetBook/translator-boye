@@ -1,8 +1,8 @@
 import openai
-import random
-from transformers import GPT2TokenizerFast
+# import random
+# from transformers import GPT2TokenizerFast
 
-tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+# tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 DAVINCI_PRICE = 0.02
 
@@ -26,59 +26,71 @@ async def gentext(genprompt, no_prompt=False, **kwargs):
         return ("fail", e)
 
 
-def tokenize(text: str) -> object:
-    tok = tokenizer(text)["input_ids"]
-    cnt = len(tok)
-    return {"tokens": tok, "count": cnt}
+async def genchat(messages, max=512, temp=0, freq=0.0, pres=0.0):
+    try:
+        print(messages)
+        res = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=max,
+            temperature=temp,
+            frequency_penalty=freq,
+            presence_penalty=pres
+        )
+        print(res)
+        generation = res['choices'][0]['message']['content']
+        return ("success", generation)
+    except openai.error.OpenAIError as e:
+        return ("fail", e)
 
 
 # def decode(tokens: list) -> str:
 #     text = tokenizer.decode(tokens)
 
 
-def prettyprintingtokens(text: str, op="history") -> str:
-    res = tokenize(text)
-    count = res["count"]
-    ids = res["tokens"]
-    price = (count / 1000) * DAVINCI_PRICE
-    memfull = round((count / 4000) * 100, 0)
+# def prettyprintingtokens(text: str, op="history") -> str:
+#     res = tokenize(text)
+#     count = res["count"]
+#     ids = res["tokens"]
+#     price = (count / 1000) * DAVINCI_PRICE
+#     memfull = round((count / 4000) * 100, 0)
 
-    if len(text) > 1700:
-        text = text[:1700] + "\n[truncated due to Discord character limit]"
-    pretty = ""
-    if op == "price":
-        pretty = f"```{text}```Text is {count} tokens.\nThis prompt costs approximately ${format(price, '.5f')}."
-        pretty = (
-            pretty
-            + f"\nThe entire prompt would occupy about {memfull:.0f}% of the AI's memory."
-        )
-    if op == "ids":
-        id_strs = []
-        for idx in range(len(ids)):
-            id_strs.append(str(ids[idx]))
-        tok = ", ".join(id_strs)
-        pretty = f"```{tok}```"
-    if op == "history":
-        pretty = f"```{text}```Chat history contains {count} tokens.\nThe next message will cost approximately ${format(price, '.5f')} to generate."
-        pretty = (
-            pretty
-            + f"\nThe chat history currently occupies about {memfull:.0f}% of the AI's memory."
-        )
+#     if len(text) > 1700:
+#         text = text[:1700] + "\n[truncated due to Discord character limit]"
+#     pretty = ""
+#     if op == "price":
+#         pretty = f"```{text}```Text is {count} tokens.\nThis prompt costs approximately ${format(price, '.5f')}."
+#         pretty = (
+#             pretty
+#             + f"\nThe entire prompt would occupy about {memfull:.0f}% of the AI's memory."
+#         )
+#     if op == "ids":
+#         id_strs = []
+#         for idx in range(len(ids)):
+#             id_strs.append(str(ids[idx]))
+#         tok = ", ".join(id_strs)
+#         pretty = f"```{tok}```"
+#     if op == "history":
+#         pretty = f"```{text}```Chat history contains {count} tokens.\nThe next message will cost approximately ${format(price, '.5f')} to generate."
+#         pretty = (
+#             pretty
+#             + f"\nThe chat history currently occupies about {memfull:.0f}% of the AI's memory."
+#         )
 
-    return pretty
-
-
-def randomtokens(numtokens):
-    return tokenizer.decode(random.choices(range(50257), k=numtokens))
+#     return pretty
 
 
-def compressChr(text):
-    text = text.replace(".", "<|endoftext|>")
-    tokens = tokenizer.encode(text)
-    return "".join([chr(i) for i in tokens])
+# def randomtokens(numtokens):
+#     return tokenizer.decode(random.choices(range(50257), k=numtokens))
 
 
-def decompressChr(text):
-    tokens = [ord(i) for i in text]
-    text = tokenizer.decode(tokens)
-    return text.replace("<|endoftext|>", ".")
+# def compressChr(text):
+#     text = text.replace(".", "<|endoftext|>")
+#     tokens = tokenizer.encode(text)
+#     return "".join([chr(i) for i in tokens])
+
+
+# def decompressChr(text):
+#     tokens = [ord(i) for i in text]
+#     text = tokenizer.decode(tokens)
+#     return text.replace("<|endoftext|>", ".")

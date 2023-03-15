@@ -42,7 +42,8 @@ server_options = {}
 with open("keys.json") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
-    TOKEN = wee["discord_token"]
+    # TOKEN = wee["discord_token"]
+    TOKEN = "MTA3NzY4MTQ4MTIyMjIwMTM1NA.GWMfBn.brY5jQbK_4BKi0HQoaFz-7cX5KswqNqOZL73Ro"
 
 
 with open("settings.json") as setty:
@@ -86,14 +87,10 @@ if polite:
 mark_pre_msg = " ".join([human_preface, puppet_preface_end])
 
 for idx in chat_channel_ids:
-    chat_memories[idx] = ChatMemory(max_tokens=def_token_thresh).add(
-        ai_pre_msg, ai_nomem
-    ).setprompt(ai_pre_msg)
+    chat_memories[idx] = ChatMemory()
 
 for mdx in mark_channel_ids:
-    chat_memories[mdx] = ChatMemory(max_tokens=def_token_thresh).add(
-        mark_pre_msg, "Mark: Hey, baby. How are you tonight?"
-    ).setprompt(mark_pre_msg)
+    chat_memories[mdx] = ChatMemory()
 
 
 async def sendtext(msg, genprompt):
@@ -137,86 +134,42 @@ async def sendpic(msg: discord.Message, genprompt: str, redo=False):
 async def textwithmem(
     msg: discord.Message, genprompt: str, altmodel="davinki", mark=False
 ):
-    yewser = msg.author.name
-    max = 0
+    # yewser = msg.author.name
+    max = 512
     freq_pen = 0
     presence_pen = 0
     temp = 0.75
-    chatformatting = True
-
-    if altmodel == "davinki":
-        altmodel = "text-davinci-003"
-        max = 512
-    #     chatformatting = True
-    #     temp = 1.0
-    # if altmodel == "davinki-01":
-    #     altmodel = "davinci"
-    #     max = 256
-    #     freq_pen = 0.5
-    #     temp = 0.7
-    # elif altmodel == "curie":
-    #     altmodel = "text-curie-001"
-    #     max = 512
-    #     chatformatting = True
-    # elif altmodel == "ada":
-    #     altmodel = "ada"
-    #     max = 128
-    #     chatformatting = False
-    #     freq_pen = 1.0
-
-    # preface = ai_pre_msg
-    # ai_name = "AI"
-
-    # ai_name = "You"
-
-    # if mark:
-    #     # preface = mark_pre_msg
-    #     ai_name = "Mark"
 
     try:
         if genprompt[len(genprompt) - 1] == " ":
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
-        fullprom = chat_memories[msg.channel.id].construct()
-        # print(fullprom)
-        if chatformatting:
-            fullprom = fullprom + f"{yewser}: {genprompt}"
-            fullprom = fullprom + f"\n{ai_name}:"
+        chat_memories[msg.channel.id].add("user", genprompt)
 
-        print(text.tokenize(fullprom)["count"])
+        messages = chat_memories[msg.channel.id].get()
 
-        res = openai.Completion.create(
-            model=altmodel,
-            prompt=fullprom,
-            max_tokens=max,
-            temperature=temp,
-            frequency_penalty=freq_pen,
-            presence_penalty=presence_pen,
+        res = await text.genchat(
+            messages=messages,
+            max=max,
+            temp=temp,
+            freq=freq_pen,
+            pres=presence_pen
         )
 
-        generation = res["choices"][0]["text"]
+        generation = res[1]
 
-        if len(generation) <= 1:
-            return
+        # if len(generation) <= 1:
+        #     return
 
         await msg.reply(content=generation)
 
-        if chatformatting:
-            chat_memories[msg.channel.id].add(
-                f"{yewser}: {genprompt}"
-            )
-        else:
-            chat_memories[msg.channel.id].add(f"{genprompt}")
-
-        if chatformatting:
-            generation = generation + "\n"
-
-        chat_memories[msg.channel.id].add(f"{ai_name}: {generation}")
-        # print(chatarrays[msg.channel.id])
+        chat_memories[msg.channel.id].add("assistant", generation)
 
         return 0  # ok
 
     except openai.error.OpenAIError as e:
+        return e  # not ok...
+    except openai.error.RateLimitError as e:
         return e  # not ok...
     except discord.errors.HTTPException:
         await msg.channel.send(
@@ -272,42 +225,42 @@ async def on_message(message: discord.Message):
                     await sendpic(message, genprompt=fullprompt)
                     return
 
-                if com == "redo":
-                    await sendpic(message, genprompt=image_memories[idh], redo=True)
-                    return
+                # if com == "redo":
+                #     await sendpic(message, genprompt=image_memories[idh], redo=True)
+                #     return
 
-                if com == "edit":
-                    # get image attachment from discord message
-                    if len(message.attachments) == 0:
-                        await message.channel.send(
-                            content="You need to attach an image to edit."
-                        )
-                    else:
-                        dld = await images.downloadpic(message.attachments[0].url)
-                        res = await images.editpic(dld, fullprompt)
-                        if res[0] == "success":
-                            await message.channel.send(
-                                content=f"Here's your '{fullprompt}'!\nEditing took about {res[2]} seconds.",
-                                file=discord.File(res[1]),
-                            )
-                        else:
-                            await message.channel.send(content=f"{res[1]}")
+                # if com == "edit":
+                #     # get image attachment from discord message
+                #     if len(message.attachments) == 0:
+                #         await message.channel.send(
+                #             content="You need to attach an image to edit."
+                #         )
+                #     else:
+                #         dld = await images.downloadpic(message.attachments[0].url)
+                #         res = await images.editpic(dld, fullprompt)
+                #         if res[0] == "success":
+                #             await message.channel.send(
+                #                 content=f"Here's your '{fullprompt}'!\nEditing took about {res[2]} seconds.",
+                #                 file=discord.File(res[1]),
+                #             )
+                #         else:
+                #             await message.channel.send(content=f"{res[1]}")
 
-                if com == "variation":
-                    if len(message.attachments) == 0:
-                        await message.channel.send(
-                            content="You need to attach an image to edit."
-                        )
-                    else:
-                        dld = await images.downloadpic(message.attachments[0].url)
-                        res = await images.variationpic(dld)
-                        if res[0] == "success":
-                            await message.channel.send(
-                                content=f"Here's your variation!\nGeneration took about {res[2]} seconds.",
-                                file=discord.File(res[1]),
-                            )
-                        else:
-                            await message.channel.send(content=f"{res[1]}")
+                # if com == "variation":
+                #     if len(message.attachments) == 0:
+                #         await message.channel.send(
+                #             content="You need to attach an image to edit."
+                #         )
+                #     else:
+                #         dld = await images.downloadpic(message.attachments[0].url)
+                #         res = await images.variationpic(dld)
+                #         if res[0] == "success":
+                #             await message.channel.send(
+                #                 content=f"Here's your variation!\nGeneration took about {res[2]} seconds.",
+                #                 file=discord.File(res[1]),
+                #             )
+                #         else:
+                #             await message.channel.send(content=f"{res[1]}")
 
                 if com == "text":  # generate text
                     await message.channel.send(content=deprecationsoon)
@@ -321,83 +274,49 @@ async def on_message(message: discord.Message):
                     )
                     chat_memories[idh].clear()
 
-                    if idh in mark_channel_ids:
-                        chat_memories[idh].add(
-                            mark_pre_msg, "Mark: Hey, baby. How are you tonight?"
-                        )
-                        await message.channel.send(
-                            content="Hey, baby. How are you tonight?"
-                        )
-                    else:
-                        chat_memories[idh].add(ai_pre_msg, ai_nomem)
+                    # if idh in mark_channel_ids:
+                    #     chat_memories[idh].add(
+                    #         mark_pre_msg, "Mark: Hey, baby. How are you tonight?"
+                    #     )
+                    #     await message.channel.send(
+                    #         content="Hey, baby. How are you tonight?"
+                    #     )
+                    # else:
+                    #     chat_memories[idh].add(ai_pre_msg, ai_nomem)
                     return
 
-                if com == "prompt":  # show ai's prompt
-                    await message.channel.send(content=deprecationsoon)
-                    if fullprompt == "":
-                        if idh in chat_channel_ids:
-                            chunk = ai_pre_msg
-                            if len(ai_pre_msg) > 1700:
-                                chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
-                            await message.channel.send(content=f"```{chunk}```")
-                        elif idh in mark_channel_ids:
-                            await message.channel.send(content=f"```{mark_pre_msg}```")
-                    elif fullprompt == "reset":
-                        ai_pre_msg = ai_preface + helpful_preface_end
-                        if len(ai_pre_msg) > 1700:
-                            chunk = ai_preface[:1700] + "\n[truncated due to Discord character limit]"
-                        await message.channel.send(content=f"Prompt was reset.\n```{chunk}```")
-                        await message.channel.send(
-                            content="i forgor :skull:\nChat memory has been cleared."
-                        )
-                        chat_memories[idh].clear()
-                        chat_memories[idh].add(ai_pre_msg, ai_nomem)
-                    else:
-                        ai_pre_msg = fullprompt
-                        chunk = ai_pre_msg
-                        if len(ai_pre_msg) > 1700:
-                            chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
-                        await message.channel.send(content=f"Prompt was changed.\n```{chunk}```")
-                        await message.channel.send(
-                            content="i forgor :skull:\nChat memory has been cleared."
-                        )
-                        chat_memories[idh].clear()
-                        chat_memories[idh].add(ai_pre_msg, ai_nomem)
-                    return
-
-                if com == "history":  # show chat history
-                    chanmemory = chat_memories.get(message.channel.id, None)
-                    if chanmemory is not None:
-                        chanmemory = chanmemory.construct()
-                    else:
-                        chanmemory = "This is not a chat channel!"
-                    res = text.prettyprintingtokens(chanmemory, op="history")
-                    await message.channel.send(content=res)
-
-                if com == "price":  # calculate price of prompt
-                    res = text.prettyprintingtokens(fullprompt, op="price")
-                    await message.channel.send(content=res)
-
-                if com == "ids":  # show token ids
-                    res = text.prettyprintingtokens(fullprompt, op="ids")
-                    await message.channel.send(content=res)
-
-                if com == "maxtoken":  # set max token limit
-                    try:
-                        if fullprompt == "" or fullprompt is None:
-                            await message.channel.send(
-                                content=f"Current token limit is {chat_memories[message.channel.id].max_tokens} tokens."
-                            )
-                            return
-                        new = int(fullprompt)
-                        if new > 4000 or new < 200:
-                            raise ValueError
-                        chat_memories[message.channel.id].max_tokens = new
-                        await message.channel.send(content=f"New token limit is {new}.")
-                    except ValueError:
-                        await message.channel.send(
-                            content="Token limit must be a **number** between 200 and 4000."
-                        )
+                # if com == "prompt":  # show ai's prompt
+                #     await message.channel.send(content=deprecationsoon)
+                #     if fullprompt == "":
+                #         if idh in chat_channel_ids:
+                #             chunk = ai_pre_msg
+                #             if len(ai_pre_msg) > 1700:
+                #                 chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
+                #             await message.channel.send(content=f"```{chunk}```")
+                #         elif idh in mark_channel_ids:
+                #             await message.channel.send(content=f"```{mark_pre_msg}```")
+                #     elif fullprompt == "reset":
+                #         ai_pre_msg = ai_preface + helpful_preface_end
+                #         if len(ai_pre_msg) > 1700:
+                #             chunk = ai_preface[:1700] + "\n[truncated due to Discord character limit]"
+                #         await message.channel.send(content=f"Prompt was reset.\n```{chunk}```")
+                #         await message.channel.send(
+                #             content="i forgor :skull:\nChat memory has been cleared."
+                #         )
+                #         chat_memories[idh].clear()
+                #         chat_memories[idh].add(ai_pre_msg, ai_nomem)
+                #     else:
+                #         ai_pre_msg = fullprompt
+                #         chunk = ai_pre_msg
+                #         if len(ai_pre_msg) > 1700:
+                #             chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
+                #         await message.channel.send(content=f"Prompt was changed.\n```{chunk}```")
+                #         await message.channel.send(
+                #             content="i forgor :skull:\nChat memory has been cleared."
+                #         )
+                #         chat_memories[idh].clear()
+                #         chat_memories[idh].add(ai_pre_msg, ai_nomem)
+                #     return
 
                 if com == "name":
                     if fullprompt == "":
@@ -411,38 +330,38 @@ async def on_message(message: discord.Message):
                     )
                 # if com == "start":
 
-                if com == "tokenpuke":
-                    num = 32
-                    if fullprompt != "":
-                        try:
-                            num = int(fullprompt)
-                        except ValueError:
-                            await message.channel.send(
-                                content="Must be a number."
-                            )
-                            return
-                    puke = text.randomtokens(num)
-                    if len(puke) > 2000:
-                        puke = puke[:2000]
-                    await message.channel.send(content=puke)
+                # if com == "tokenpuke":
+                #     num = 32
+                #     if fullprompt != "":
+                #         try:
+                #             num = int(fullprompt)
+                #         except ValueError:
+                #             await message.channel.send(
+                #                 content="Must be a number."
+                #             )
+                #             return
+                #     puke = text.randomtokens(num)
+                #     if len(puke) > 2000:
+                #         puke = puke[:2000]
+                #     await message.channel.send(content=puke)
 
-                if com == "compress":
-                    if fullprompt == "":
-                        await message.channel.send(
-                            content="No text to compress."
-                        )
-                        return
-                    res = text.compressChr(fullprompt)
-                    await message.channel.send(content=f"```{res}```")
+                # if com == "compress":
+                #     if fullprompt == "":
+                #         await message.channel.send(
+                #             content="No text to compress."
+                #         )
+                #         return
+                #     res = text.compressChr(fullprompt)
+                #     await message.channel.send(content=f"```{res}```")
 
-                if com == "decompress":
-                    if fullprompt == "":
-                        await message.channel.send(
-                            content="No text to decompress."
-                        )
-                        return
-                    res = text.decompressChr(fullprompt)
-                    await message.channel.send(content=f"```{res}```")
+                # if com == "decompress":
+                #     if fullprompt == "":
+                #         await message.channel.send(
+                #             content="No text to decompress."
+                #         )
+                #         return
+                #     res = text.decompressChr(fullprompt)
+                #     await message.channel.send(content=f"```{res}```")
 
         # elif message.channel.id == 1053216521020772372:
         #     async with message.channel.typing():
@@ -634,10 +553,50 @@ async def SetChatCommand(interaction: discord.Interaction):
     return
 
 
+@tree.command(name="system-prompt", description="Set the system prompt for ChatGPT.")
+async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = None, noclear: bool = False):
+    channelid = interaction.channel_id
+
+    if channelid not in chat_channel_ids:
+        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        return
+
+    if prompt is None:
+        await interaction.response.send_message(content="No system prompt set.")
+        return
+
+    chat_memories[channelid].setsystem(prompt)
+    if not noclear:
+        chat_memories[channelid].clear()
+    await interaction.response.send_message(content=f"System message changed.\n```{prompt}```\nMemory cleared.")
+    return
+
+
+@tree.command(name="starter-message", description="Add a starting assistant message to give context.")
+@app_commands.describe(noclear="don't clear the chat memory")
+async def StarterMessageCommand(interaction: discord.Interaction, starter: str = None, noclear: bool = False):
+    channelid = interaction.channel_id
+
+    if channelid not in chat_channel_ids:
+        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        return
+
+    if starter is None:
+        await interaction.response.send_message(content="No starter message set.")
+        return
+
+    chat_memories[channelid].setstarter(starter)
+    if not noclear:
+        chat_memories[channelid].clear()
+    await interaction.response.send_message(content=f"Starter message changed.\n```{starter}```")
+    return
+
+
 @tree.command(name="die", description="Dies.")
 async def DieFunny(interaction: discord.Interaction):
     await interaction.response.send_message(content=":skull:")
     return
+
 
 # not even sure if this guy works at all
 @TextCommand.error

@@ -291,12 +291,22 @@ async def SetChatCommand(interaction: discord.Interaction):
     if interaction.channel_id in chat_channel_ids:
         await interaction.response.send_message(content="This channel is already a chat channel.")
         return
-    chat_memories[interaction.channel_id] = ChatMemory(max_tokens=def_token_thresh).add(
-        ai_pre_msg, ai_nomem
-    )
+    chat_memories[interaction.channel_id] = ChatMemory()
     chat_channel_ids.append(interaction.channel_id)
     save_settings()
     await interaction.response.send_message(content="This channel is now a chat channel.")
+    return
+
+
+@tree.command(name="unchat", description="Remove chat from this channel.")
+async def UnChatCommand(interaction: discord.Interaction):
+    if interaction.channel_id not in chat_channel_ids:
+        await interaction.response.send_message(content="This channel is not a chat channel.")
+        return
+    chat_memories.pop(interaction.channel_id)
+    chat_channel_ids.remove(interaction.channel_id)
+    save_settings()
+    await interaction.response.send_message(content="This channel is no longer a chat channel.")
     return
 
 
@@ -346,6 +356,18 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
     if not noclear:
         chat_memories[channelid].clear()
     await interaction.response.send_message(content=f"Starter message changed.\n```{starter}```")
+    return
+
+
+@tree.command(name="setprefix", description="Set the chat prefix for this server.")
+@app_commands.describe(prefix="new chat prefix, ideally one character")
+async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None):
+    if prefix is None:
+        await interaction.response.send_message(content="Current prefix: " + server_options[str(interaction.guild.id)]["chat_prefix"])
+        return
+    server_options[str(interaction.guild.id)]["chat_prefix"] = prefix
+    save_settings()
+    await interaction.response.send_message(content=f"Prefix set to `{prefix}`.")
     return
 
 

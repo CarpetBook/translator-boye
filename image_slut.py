@@ -2,41 +2,10 @@ import discord
 from discord import app_commands
 import openai
 import json
-import images
 import text
 from memory import ChatMemory
 
-ai_nomem = """So far, there has been no chat history and no discussion."""
-
-ai_nomem = ""
-
-deprecationsoon = "Please start using the new slash commands. '!' commands will be removed soon."
-
-ai_preface = """You are chatting with humans. The user's messages are prefaced with the user's username."""
-
-human_preface = """You're talking with people online. Your name is Mark. \
-You're a calm, cool, passionate, sensual, seductive man who's not afraid to take what he wants. \
-Every one of your messages is dripping with sexual intent."""
-
-helpful_preface_end = (
-    """Your job is to help people with questions they might want to know about."""
-)
-
-puppet_preface_end = """Play along with their messages, even if they don't make sense. \
-From conversations to stories, roleplay to full erotic chat sex... \
-you do it all. If they talk about sex, indulge their fantasies."""
-
-# The user can optionally request an image to be generated. \
-# The AI can put "<image>example</image>" at the END of its message to generate an image. \
-# Replace "example" with the user's desired image. \
-
-intent_checker_question = """Does User want an image? If you're not sure, say no:"""
-
-DAVINCI_PRICE = 0.02
-def_token_thresh = 1024
-
 chat_channel_ids = []
-mark_channel_ids = []
 server_options = {}
 
 with open("keys.json") as filey:
@@ -50,13 +19,12 @@ with open("settings.json") as setty:
     the = json.load(setty)
     chat_channel_ids = the["chat_channels"]
     print(chat_channel_ids)
-    mark_channel_ids = the["mark_channels"]
     server_options = the["server_options"]
 
 
 def save_settings():
     with open("settings.json", "w") as savey:
-        the = {"chat_channels": chat_channel_ids, "mark_channels": mark_channel_ids, "server_options": server_options}
+        the = {"chat_channels": chat_channel_ids, "server_options": server_options}
         savey.write(json.dumps(the, indent=4))
 
 
@@ -66,69 +34,12 @@ client = discord.Client(intents=botintents, activity=activity)
 tree = app_commands.CommandTree(client)
 
 
-async def yeah():
-    await tree.sync(guild=discord.Object(id=1072352297503440936))
-
 chat_memories = {}
 image_memories = {}
-ai_pre_msg = ""
-mark_pre_msg = ""
 
-ai_name = "AI"
-
-polite = True
-# puppet = False
-# human = False
-
-
-if polite:
-    ai_pre_msg = " ".join([ai_preface, helpful_preface_end])
-
-mark_pre_msg = " ".join([human_preface, puppet_preface_end])
 
 for idx in chat_channel_ids:
     chat_memories[idx] = ChatMemory()
-
-for mdx in mark_channel_ids:
-    chat_memories[mdx] = ChatMemory()
-
-
-async def sendtext(msg, genprompt):
-    res = await text.gentext(genprompt)
-    if res[0] == "fail":
-        await msg.channel.send(res[1])
-        return
-    else:
-        khan_tent = res[1]
-
-    await msg.channel.send(content=khan_tent)
-
-
-async def sendpic(msg: discord.Message, genprompt: str, redo=False):
-    retried = False
-    if msg.channel.id in image_memories.keys():
-        if image_memories[msg.channel.id] == genprompt and not redo:
-            retried = True
-    res = await images.genpic(genprompt)
-    if res[0] == "fail":
-        await msg.channel.send(res[1])
-        return
-    else:
-        filename = res[1]
-        timer = res[2]
-    image_memories[msg.channel.id] = genprompt
-
-    piccy = discord.File(fp=open(filename, "rb"))
-    send = f"Here's your '{genprompt}'!\nGeneration took about {timer} seconds."
-    if retried:
-        send += "\n\nP.S., you can use the `!redo` command to retry the last image."
-
-    await msg.channel.send(content=send, file=piccy)
-
-    if msg.channel.id in chat_memories.keys():
-        record = "Image requested by " + msg.author.name + ': "' + genprompt + '"'
-        chat_memories[msg.channel.id].add(record)
-        print(chat_memories[msg.channel.id].get())
 
 
 async def textwithmem(
@@ -239,9 +150,6 @@ async def on_message(message: discord.Message):
                             await message.channel.reply(content="Sorry, something's wrong. I tried three times, and they all gave errors. You may have to try again later, or contact hako.")
                             return
                         await textwithmem(message, genprompt=orig)
-        elif idh in mark_channel_ids:
-            async with message.channel.typing():
-                await textwithmem(message, genprompt=orig, mark=True)
 
 
 def isNotClient():

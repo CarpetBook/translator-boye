@@ -165,6 +165,8 @@ async def textwithmem(
 
         chat_memories[msg.channel.id].add("assistant", generation)
 
+        chat_memories[msg.channel.id].clean()
+
         return 0  # ok
 
     except openai.error.OpenAIError as e:
@@ -217,157 +219,7 @@ async def on_message(message: discord.Message):
                     await tree.sync()
                     return
 
-                if com == "image":  # generate image
-                    await message.channel.send(content=deprecationsoon)
-                    if ops is not None and ops["allow_images"] is False:
-                        await message.channel.send(
-                            content="Sorry, image generation is disabled on this server."
-                        )
-                        return
-                    await sendpic(message, genprompt=fullprompt)
-                    return
 
-                # if com == "redo":
-                #     await sendpic(message, genprompt=image_memories[idh], redo=True)
-                #     return
-
-                # if com == "edit":
-                #     # get image attachment from discord message
-                #     if len(message.attachments) == 0:
-                #         await message.channel.send(
-                #             content="You need to attach an image to edit."
-                #         )
-                #     else:
-                #         dld = await images.downloadpic(message.attachments[0].url)
-                #         res = await images.editpic(dld, fullprompt)
-                #         if res[0] == "success":
-                #             await message.channel.send(
-                #                 content=f"Here's your '{fullprompt}'!\nEditing took about {res[2]} seconds.",
-                #                 file=discord.File(res[1]),
-                #             )
-                #         else:
-                #             await message.channel.send(content=f"{res[1]}")
-
-                # if com == "variation":
-                #     if len(message.attachments) == 0:
-                #         await message.channel.send(
-                #             content="You need to attach an image to edit."
-                #         )
-                #     else:
-                #         dld = await images.downloadpic(message.attachments[0].url)
-                #         res = await images.variationpic(dld)
-                #         if res[0] == "success":
-                #             await message.channel.send(
-                #                 content=f"Here's your variation!\nGeneration took about {res[2]} seconds.",
-                #                 file=discord.File(res[1]),
-                #             )
-                #         else:
-                #             await message.channel.send(content=f"{res[1]}")
-
-                if com == "text":  # generate text
-                    await message.channel.send(content=deprecationsoon)
-                    await sendtext(message, genprompt=fullprompt)
-                    return
-
-                if com == "clear":  # clear chat history
-                    await message.channel.send(content=deprecationsoon)
-                    await message.channel.send(
-                        content="i forgor :skull:\nChat memory has been cleared."
-                    )
-                    chat_memories[idh].clear()
-
-                    # if idh in mark_channel_ids:
-                    #     chat_memories[idh].add(
-                    #         mark_pre_msg, "Mark: Hey, baby. How are you tonight?"
-                    #     )
-                    #     await message.channel.send(
-                    #         content="Hey, baby. How are you tonight?"
-                    #     )
-                    # else:
-                    #     chat_memories[idh].add(ai_pre_msg, ai_nomem)
-                    return
-
-                # if com == "prompt":  # show ai's prompt
-                #     await message.channel.send(content=deprecationsoon)
-                #     if fullprompt == "":
-                #         if idh in chat_channel_ids:
-                #             chunk = ai_pre_msg
-                #             if len(ai_pre_msg) > 1700:
-                #                 chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
-                #             await message.channel.send(content=f"```{chunk}```")
-                #         elif idh in mark_channel_ids:
-                #             await message.channel.send(content=f"```{mark_pre_msg}```")
-                #     elif fullprompt == "reset":
-                #         ai_pre_msg = ai_preface + helpful_preface_end
-                #         if len(ai_pre_msg) > 1700:
-                #             chunk = ai_preface[:1700] + "\n[truncated due to Discord character limit]"
-                #         await message.channel.send(content=f"Prompt was reset.\n```{chunk}```")
-                #         await message.channel.send(
-                #             content="i forgor :skull:\nChat memory has been cleared."
-                #         )
-                #         chat_memories[idh].clear()
-                #         chat_memories[idh].add(ai_pre_msg, ai_nomem)
-                #     else:
-                #         ai_pre_msg = fullprompt
-                #         chunk = ai_pre_msg
-                #         if len(ai_pre_msg) > 1700:
-                #             chunk = ai_pre_msg[:1700] + "\n[truncated due to Discord character limit]"
-                #         await message.channel.send(content=f"Prompt was changed.\n```{chunk}```")
-                #         await message.channel.send(
-                #             content="i forgor :skull:\nChat memory has been cleared."
-                #         )
-                #         chat_memories[idh].clear()
-                #         chat_memories[idh].add(ai_pre_msg, ai_nomem)
-                #     return
-
-                if com == "name":
-                    if fullprompt == "":
-                        await message.channel.send(
-                            content=f"Current name is {ai_name}."
-                        )
-                        return
-                    ai_name = fullprompt
-                    await message.channel.send(
-                        content=f"New name is {ai_name}."
-                    )
-                # if com == "start":
-
-                # if com == "tokenpuke":
-                #     num = 32
-                #     if fullprompt != "":
-                #         try:
-                #             num = int(fullprompt)
-                #         except ValueError:
-                #             await message.channel.send(
-                #                 content="Must be a number."
-                #             )
-                #             return
-                #     puke = text.randomtokens(num)
-                #     if len(puke) > 2000:
-                #         puke = puke[:2000]
-                #     await message.channel.send(content=puke)
-
-                # if com == "compress":
-                #     if fullprompt == "":
-                #         await message.channel.send(
-                #             content="No text to compress."
-                #         )
-                #         return
-                #     res = text.compressChr(fullprompt)
-                #     await message.channel.send(content=f"```{res}```")
-
-                # if com == "decompress":
-                #     if fullprompt == "":
-                #         await message.channel.send(
-                #             content="No text to decompress."
-                #         )
-                #         return
-                #     res = text.decompressChr(fullprompt)
-                #     await message.channel.send(content=f"```{res}```")
-
-        # elif message.channel.id == 1053216521020772372:
-        #     async with message.channel.typing():
-        #         await textwithmem(message, genprompt=orig, altmodel="ada")
         elif idh in chat_channel_ids:
             # message.guild.id has to be string bc json won't accept int as key/property name
             ops = server_options.get(str(message.guild.id), None)
@@ -390,14 +242,7 @@ async def on_message(message: discord.Message):
         elif idh in mark_channel_ids:
             async with message.channel.typing():
                 await textwithmem(message, genprompt=orig, mark=True)
-        # elif message.channel.id == 1060826456000827462:
-        #     async with message.channel.typing():
-        #         await selfchat(message, genprompt=orig)
 
-
-# begin COMPLETE refactor of command loop
-
-# check funcs here
 
 def isNotClient():
     def predicate(interaction: discord.Interaction) -> bool:
@@ -425,38 +270,6 @@ def serverAllowedImage(interaction: discord.Interaction):
     print(serverKnown(ids))
     print(server_options[ids]["allow_images"])
     return serverKnown(ids) and server_options[ids]["allow_images"]
-
-
-# async def sendpic(msg: discord.Message, genprompt: str, redo=False):
-#     retried = False
-#     if msg.channel.id in image_memories.keys():
-#         if image_memories[msg.channel.id] == genprompt and not redo:
-#             retried = True
-#     res = await images.genpic(genprompt)
-#     if res[0] == "fail":
-#         await msg.channel.send(res[1])
-#         return
-#     else:
-#         filename = res[1]
-#         timer = res[2]
-#     image_memories[msg.channel.id] = genprompt
-
-#     piccy = discord.File(fp=open(filename, "rb"))
-#     send = f"Here's your '{genprompt}'!\nGeneration took about {timer} seconds."
-#     if retried:
-#         send += "\n\nP.S., you can use the `!redo` command to retry the last image."
-
-#     await msg.channel.send(content=send, file=piccy)
-
-#     if msg.channel.id in chat_memories.keys():
-#         record = "Image requested by " + msg.author.name + ': "' + genprompt + '"'
-#         chat_memories[msg.channel.id].add(record)
-#         print(chat_memories[msg.channel.id].get())
-
-
-# NOT using command checks, because they're not very well documented for interactions right now,
-# or i just can't figure out how to use them, idk, either way it's a waste of my time to try
-# to figure it out and i'm just gonna do it the lazy way for all of them
 
 
 @tree.command(name="clear", description="Clear the chat history for this channel.")

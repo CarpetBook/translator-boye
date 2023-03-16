@@ -13,7 +13,7 @@
 			"name": "ufsih",
 			"allow_images": true,
 			"can_chat": true,
-			"chat_prefix": null
+			"chat_prefix": "-"
 		},
 		"1072352297503440936": {
 			"name": "hunm",

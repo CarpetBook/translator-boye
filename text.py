@@ -26,7 +26,7 @@ async def gentext(genprompt, no_prompt=False, **kwargs):
         return ("fail", e)
 
 
-async def genchat(messages, max=512, temp=0, freq=0.0, pres=0.0):
+async def genchat(messages, max=512, temp=0, freq=1, pres=1):
     try:
         print(messages)
         res = openai.ChatCompletion.create(

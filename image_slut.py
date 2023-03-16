@@ -43,7 +43,7 @@ for idx in chat_channel_ids:
 
 
 async def textwithmem(
-    msg: discord.Message, genprompt: str, altmodel="davinki", mark=False
+    msg: discord.Message, genprompt: str, prepend: str = None
 ):
     # yewser = msg.author.name
     max = 512
@@ -68,6 +68,9 @@ async def textwithmem(
         )
 
         generation = res[1]
+
+        if prepend is not None:
+            generation = prepend + generation
 
         # if len(generation) <= 1:
         #     return
@@ -134,6 +137,7 @@ async def on_message(message: discord.Message):
         elif idh in chat_channel_ids:
             # message.guild.id has to be string bc json won't accept int as key/property name
             ops = server_options.get(str(message.guild.id), None)
+            prepense = server_options[str(message.guild.id)]["start_with"]
             if ops is not None:
                 prefix = ops["chat_prefix"]
             if not ops["can_chat"]:
@@ -142,14 +146,14 @@ async def on_message(message: discord.Message):
                 async with message.channel.typing():
                     if prefix is not None:
                         orig = orig[len(prefix):]  # remove prefix
-                    ret = await textwithmem(message, genprompt=orig)
+                    ret = await textwithmem(message, genprompt=orig, prepend=prepense)
                     tries = 0
                     if ret != 0:
                         tries += 1
                         if tries > 3:
                             await message.channel.reply(content="Sorry, something's wrong. I tried three times, and they all gave errors. You may have to try again later, or contact hako.")
                             return
-                        await textwithmem(message, genprompt=orig)
+                        await textwithmem(message, genprompt=orig, prepend=prepense)
 
 
 def isNotClient():
@@ -278,5 +282,25 @@ async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None)
     await interaction.response.send_message(content=f"Prefix set to `{prefix}`.")
     return
 
+
+@tree.command(name="startwith", description="Always prepend a response with a certain string.")
+@app_commands.describe(startwith="string to prepend")
+@app_commands.describe(remove="stops prepending a string")
+async def StartWithCommand(interaction: discord.Interaction, startwith: str = None, remove: bool = None):
+    if remove is not None and remove is True:
+        server_options[str(interaction.guild.id)]["start_with"] = None
+        save_settings()
+        await interaction.response.send_message(content="Prepended string removed.")
+        return
+    if startwith is None:
+        if server_options[str(interaction.guild.id)]["start_with"] is None:
+            await interaction.response.send_message(content="No prepended string.")
+            return
+        await interaction.response.send_message(content="Current prepended string: " + server_options[str(interaction.guild.id)]["start_with"])
+        return
+    server_options[str(interaction.guild.id)]["start_with"] = startwith
+    save_settings()
+    await interaction.response.send_message(content=f"Starting string set to `{startwith}`.")
+    return
 
 client.run(TOKEN)

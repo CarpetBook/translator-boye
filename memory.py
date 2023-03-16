@@ -30,7 +30,7 @@ class ChatMemory:
             self.memory = self.memory[
                 2:
             ]  # if chat memory is longer than 20 messages, cut off the oldest two
-            self.memory.insert(0, self.system)
+            self.memory.insert(0, {"role": "system", "content": self.system})
             print(len(self.memory))
             # print(fullprom)
 

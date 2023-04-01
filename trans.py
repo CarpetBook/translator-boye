@@ -15,7 +15,7 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
         wait = await respond.channel.send("Loading model...")
         model = whisper.load_model("large-v2")
         await wait.delete()
-    editmsg = await wait.edit("Transcribing...")
+    editmsg = await respond.channel.send(content="Transcribing...")
     result = model.transcribe(file, verbose=True, task=task, temperature=0)
 
     # file writer
@@ -50,6 +50,6 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
         response = f"Transcribed. Source language: {source_lang}\n```{newtext[:1900] + '...'}```"
 
     zippy = discord.File(f"transcripts\\{filename}.zip")
-    
+
     await respond.reply(response, file=zippy)
     await editmsg.delete()

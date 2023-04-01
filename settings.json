@@ -1,12 +1,8 @@
 {
     "chat_channels": [
         1072352297503440936,
-        1052918701663461396,
         1052918672009744414,
         1072354381271404675
-    ],
-    "mark_channels": [
-        1055681260233699359
     ],
     "server_options": {
         "848149296054272000": {
@@ -14,16 +10,18 @@
             "allow_images": true,
             "can_chat": true,
             "chat_prefix": "-",
-			"system": null,
-			"starter": null
+            "system": null,
+            "starter": null,
+            "start_with": null
         },
         "1072352297503440936": {
             "name": "hunm",
             "allow_images": true,
             "can_chat": true,
             "chat_prefix": "-",
-			"system": null,
-			"starter": null
+            "system": null,
+            "starter": null,
+            "start_with": null
         }
     }
 }

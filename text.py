@@ -1,4 +1,5 @@
 import openai
+import requests
 # import random
 # from transformers import GPT2TokenizerFast
 
@@ -43,6 +44,14 @@ async def genchat(messages, max=512, temp=0, freq=1, pres=1):
     except openai.error.OpenAIError as e:
         return ("fail", e)
 
+
+def readTxtFile(attachmenturl):
+    try:
+        r = requests.get(attachmenturl)
+        return r.text
+    except requests.exceptions.RequestException as e:
+        print(f"Something about a provided text file was malformed, or the request failed. {e}")
+        return None
 
 # def decode(tokens: list) -> str:
 #     text = tokenizer.decode(tokens)

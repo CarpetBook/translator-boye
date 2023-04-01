@@ -6,3 +6,5 @@ __pycache__/*
 loggy
 nohup.out
 .vscode/*
+audios/*
+transcripts/*

@@ -3,7 +3,13 @@ from discord import app_commands
 import openai
 import json
 import text
+import audio
+import trans
 from memory import ChatMemory
+
+import asyncio
+
+TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
 
 chat_channel_ids = []
 server_options = {}
@@ -46,9 +52,9 @@ async def textwithmem(
     msg: discord.Message, genprompt: str, prepend: str = None
 ):
     # yewser = msg.author.name
-    max = 512
-    freq_pen = 0
-    presence_pen = 0
+    max = 1024
+    freq_pen = 0.75
+    presence_pen = 0.75
     temp = 0.75
 
     try:
@@ -133,9 +139,41 @@ async def on_message(message: discord.Message):
                     await tree.sync()
                     return
 
+                if com == "downloadtest" or com == "transcribe" or com == "translate":
+                    valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
+                    attachments = message.attachments
+                    if len(attachments) > 0:
+                        for attachment in attachments:
+                            exts = attachment.filename.split(".")
+                            if not exts[-1] in valids:
+                                return
+                    dl_res = audio.downloadAudio(message.attachments[0].url, exts[-1])
+                    if dl_res[0] == "fail":
+                        await message.channel.send(f"something went wrong {dl_res[1]}")
+                        return
+                    # await message.channel.send(f"saved as {dl_res}")
+                    if com == "transcribe":
+                        asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1]))
+                    elif com == "translate":
+                        asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1], task="translate"))
+                    return
+
 
         elif idh in chat_channel_ids:
             # message.guild.id has to be string bc json won't accept int as key/property name
+            attachments = message.attachments
+            txtread = ""
+            if len(attachments) > 0:
+                for attachment in attachments:
+                    exts = attachment.filename.split(".")
+                    print(exts)
+                    print(attachment.filename)
+                    print(exts[-1])
+                    print(exts[-1] in TEXT_EXT)
+                    if exts[-1] in TEXT_EXT:
+                        txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+            orig = message.content + \
+                " " + txtread  # add text from attachments to message
             ops = server_options.get(str(message.guild.id), None)
             prepense = server_options[str(message.guild.id)]["start_with"]
             if ops is not None:
@@ -247,12 +285,19 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
 
 
 @tree.command(name="starter-message", description="Add a starting assistant message to give context.")
+@app_commands.describe(starter="assistant's starting message")
+@app_commands.describe(delete="delete the starter message")
 @app_commands.describe(noclear="don't clear the chat memory")
-async def StarterMessageCommand(interaction: discord.Interaction, starter: str = None, noclear: bool = False):
+async def StarterMessageCommand(interaction: discord.Interaction, starter: str = None, delete: bool = False, noclear: bool = False):
     channelid = interaction.channel_id
 
     if channelid not in chat_channel_ids:
         await interaction.response.send_message(content="Current channel is not a chat channel.")
+        return
+
+    if delete:
+        chat_memories[channelid].setstarter(None)
+        await interaction.response.send_message(content="Starter message deleted.")
         return
 
     if starter is None:

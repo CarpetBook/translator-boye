@@ -1,6 +1,7 @@
 import ffmpeg
 import requests
 import time
+import yt_dlp
 
 sr = 16000
 
@@ -27,3 +28,26 @@ def convertAudio(filename):
         )
     except ffmpeg.Error as e:
         raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
+
+
+def downloadYoutubeAudio(link):
+    ydl_opts = {
+        'format': 'm4a/bestaudio/best',
+        # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
+        'postprocessors': [{  # Extract audio using ffmpeg
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'm4a',
+        }],
+        'paths': {
+            'home': './audios',
+        },
+        'outtmpl': '%(id)s.%(ext)s',
+    }
+
+    info = None
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(link, download=False)
+        ydl.download(link)
+
+    # print(info)
+    return "audios\\" + info["id"] + ".m4a"

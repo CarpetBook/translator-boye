@@ -40,7 +40,8 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
     # use the segments and split by \n
     newtext = ""
     for segment in result["segments"]:
-        newtext += segment["text"] + "\n"
+        stamp = maketimestamp(segment["start"], segment["end"])
+        newtext += stamp + " " + segment["text"] + "\n"
 
     # get the language name from the language code, cheap way of detecting language
     source_lang = langcodes.Language(result["language"]).language_name()
@@ -53,3 +54,27 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
 
     await respond.reply(response, file=zippy)
     await editmsg.delete()
+
+
+def maketimestamp(startsec, endsec):
+    starthr = startsec // 3600
+    startmin = startsec // 60
+    startsec = startsec % 60
+    endhr = endsec // 3600
+    endmin = endsec // 60
+    endsec = endsec % 60
+    print(starthr, startmin, startsec, endhr, endmin, endsec)
+    starthr = "{:02d}".format(int(starthr))
+    startmin = "{:02d}".format(int(startmin))
+    if startsec < 10:
+        startsec = "0" + "{:05.3f}".format(float(startsec))
+    else:
+        startsec = "{:05.3f}".format(float(startsec))
+
+    endhr = "{:02d}".format(int(endhr))
+    endmin = "{:02d}".format(int(endmin))
+    if endsec < 10:
+        endsec = "0" + "{:05.3f}".format(float(endsec))
+    else:
+        endsec = "{:05.3f}".format(float(endsec))
+    return f"[{starthr}:{startmin}:{startsec} -> {endhr}:{endmin}:{endsec}]"

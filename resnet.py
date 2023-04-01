@@ -3,7 +3,9 @@ import torch
 
 from PIL import Image
 
+# load resnet model
 resnet = models.resnet152(pretrained=True)
+# eval mode for inference
 resnet.eval()
 
 # define image transform pipeline
@@ -23,14 +25,19 @@ with open('imagenet_classes.txt') as f:
 
 
 def run_resnet(file):
-    img = Image.open(file)
+    # make sure to convert to jpg!!!
+    img = Image.open(file).convert('RGB')
     img_t = preprocess(img)
     batch_t = torch.unsqueeze(img_t, 0)
 
+    # run resnet
     out = resnet(batch_t)
 
+    # softmax confidence of all labels
     percentage = torch.nn.functional.softmax(out, dim=1)[0] * 100
 
+    # sort labels by highest confidence
     _, indices = torch.sort(out, descending=True)
 
+    # return top 5 labels in [(label, confidence), ...] format
     return [(labels[idx], percentage[idx].item()) for idx in indices[0][:5]]

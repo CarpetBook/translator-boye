@@ -12,4 +12,6 @@ def run_ocr(file):
         if res["conf"][i] > REQUIRED_CONFIDENCE:
             text += res["text"][i] + " "
 
+    if len(text.strip()) == 0:
+        text = "[OCR found no text]"
     return text

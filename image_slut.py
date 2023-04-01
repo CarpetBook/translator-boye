@@ -7,6 +7,7 @@ import audio
 import trans
 import images
 import ocr
+import resnet
 from memory import ChatMemory
 
 import asyncio
@@ -195,6 +196,24 @@ async def on_message(message: discord.Message):
                         dl_res = await images.downloadpic(attachments[0].url)
                     # await message.channel.send(f"saved as {dl_res}")
                     await message.channel.send(ocr.run_ocr(dl_res))
+                    return
+
+                if com == "resnet":
+                    valids = IMG_EXT
+                    attachments = message.attachments
+
+                    dl_res = None
+                    if len(attachments) > 0:
+                        exts = attachments[0].filename.split(".")
+                        if not exts[-1] in valids:
+                            return
+                        dl_res = await images.downloadpic(attachments[0].url)
+                    # await message.channel.send(f"saved as {dl_res}")
+                    res = resnet.run_resnet(dl_res)
+                    restext = ""
+                    for i in res:
+                        restext += f"{i[0]}: {round(i[1], 2)}% confidence\n"
+                    await message.channel.send(restext)
                     return
 
 

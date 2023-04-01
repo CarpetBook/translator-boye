@@ -31,6 +31,7 @@ def convertAudio(filename):
 
 
 def downloadYoutubeAudio(link):
+    tiem = time.time()
     ydl_opts = {
         'format': 'm4a/bestaudio/best',
         # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
@@ -41,13 +42,13 @@ def downloadYoutubeAudio(link):
         'paths': {
             'home': './audios',
         },
-        'outtmpl': '%(id)s.%(ext)s',
+        'outtmpl': f'{tiem}.%(ext)s',
+        'noplaylist': True,
+        'playlist_items': '1'
     }
 
-    info = None
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(link, download=False)
         ydl.download(link)
 
     # print(info)
-    return ("success", "audios\\" + info["id"] + ".m4a")
+    return ("success", "audios\\" + str(tiem) + ".m4a")

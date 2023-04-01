@@ -8,8 +8,10 @@ import trans
 from memory import ChatMemory
 
 import asyncio
+import re
 
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
+URL_REGEX = r"(?:\s|^)(https?:\/\/[^\s]+)"
 
 chat_channel_ids = []
 server_options = {}
@@ -156,6 +158,15 @@ async def on_message(message: discord.Message):
                         asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1]))
                     elif com == "translate":
                         asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1], task="translate"))
+                    return
+
+                if com == "testytlink":
+                    validlink = re.search(URL_REGEX, fullprompt)
+                    if validlink is None:
+                        await message.channel.send("invalid link")
+                        return
+                    file = audio.downloadYoutubeAudio(fullprompt)
+                    asyncio.get_event_loop().create_task(trans.transcriber(message, file))
                     return
 
 

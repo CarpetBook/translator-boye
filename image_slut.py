@@ -141,15 +141,26 @@ async def on_message(message: discord.Message):
                     await tree.sync()
                     return
 
-                if com == "downloadtest" or com == "transcribe" or com == "translate":
+                if com == "transcribe" or com == "translate":
                     valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
                     attachments = message.attachments
+
+                    dl_res = None
+                    if len(attachments) > 0 and len(fullprompt) > 0 or len(attachments) > 1:
+                        await message.channel.send("Please send only one attachment or link.")
+                        return
                     if len(attachments) > 0:
-                        for attachment in attachments:
-                            exts = attachment.filename.split(".")
-                            if not exts[-1] in valids:
-                                return
-                    dl_res = audio.downloadAudio(message.attachments[0].url, exts[-1])
+                        exts = attachments[0].filename.split(".")
+                        if not exts[-1] in valids:
+                            return
+                        dl_res = audio.downloadAudio(attachments[0].url, attachments[0].filename)
+                    elif len(fullprompt) > 0:
+                        validlink = re.search(URL_REGEX, fullprompt)
+                        if validlink is None:
+                            await message.channel.send("invalid link")
+                            return
+                        dl_res = audio.downloadYoutubeAudio(fullprompt)
+
                     if dl_res[0] == "fail":
                         await message.channel.send(f"something went wrong {dl_res[1]}")
                         return

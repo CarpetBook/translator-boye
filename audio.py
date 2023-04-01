@@ -50,4 +50,4 @@ def downloadYoutubeAudio(link):
         ydl.download(link)
 
     # print(info)
-    return "audios\\" + info["id"] + ".m4a"
+    return ("success", "audios\\" + info["id"] + ".m4a")

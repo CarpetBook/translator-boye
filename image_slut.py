@@ -5,12 +5,15 @@ import json
 import text
 import audio
 import trans
+import images
+import ocr
 from memory import ChatMemory
 
 import asyncio
 import re
 
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
+IMG_EXT = ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "tif", "jfif", "exif"]
 URL_REGEX = r"(?:\s|^)(https?:\/\/[^\s]+)"
 
 chat_channel_ids = []
@@ -179,6 +182,21 @@ async def on_message(message: discord.Message):
                     file = audio.downloadYoutubeAudio(fullprompt)
                     asyncio.get_event_loop().create_task(trans.transcriber(message, file))
                     return
+
+                if com == "ocr":
+                    valids = IMG_EXT
+                    attachments = message.attachments
+
+                    dl_res = None
+                    if len(attachments) > 0:
+                        exts = attachments[0].filename.split(".")
+                        if not exts[-1] in valids:
+                            return
+                        dl_res = await images.downloadpic(attachments[0].url)
+                    # await message.channel.send(f"saved as {dl_res}")
+                    await message.channel.send(ocr.run_ocr(dl_res))
+                    return
+
 
 
         elif idh in chat_channel_ids:

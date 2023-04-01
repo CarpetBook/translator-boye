@@ -216,8 +216,6 @@ async def on_message(message: discord.Message):
                     await message.channel.send(restext)
                     return
 
-
-
         elif idh in chat_channel_ids:
             # message.guild.id has to be string bc json won't accept int as key/property name
             attachments = message.attachments

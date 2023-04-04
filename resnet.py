@@ -3,10 +3,8 @@ import torch
 
 from PIL import Image
 
-# load resnet model
-resnet = models.resnet152(pretrained=True)
-# eval mode for inference
-resnet.eval()
+# empty spot for resnet model
+resnet = None
 
 # define image transform pipeline
 preprocess = transforms.Compose([
@@ -25,6 +23,12 @@ with open('imagenet_classes.txt') as f:
 
 
 def run_resnet(file):
+    global resnet
+    if resnet is None:
+        # load resnet on demand
+        resnet = models.resnet152(pretrained=True)
+        # eval mode for inference
+        resnet.eval()
     # make sure to convert to jpg!!!
     img = Image.open(file).convert('RGB')
     img_t = preprocess(img)

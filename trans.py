@@ -16,7 +16,7 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
         model = whisper.load_model("large-v2")
         await wait.delete()
     editmsg = await respond.channel.send(content="Transcribing...")
-    result = model.transcribe(file, verbose=True, task=task, temperature=0)
+    result = model.transcribe(file, verbose=True, task=task, compression_ratio_threshold=1.5, decode_options={"beam_size": 2})
 
     # file writer
     writer = get_writer("all", "transcripts")

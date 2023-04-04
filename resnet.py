@@ -26,7 +26,7 @@ def run_resnet(file):
     global resnet
     if resnet is None:
         # load resnet on demand
-        resnet = models.resnet152(pretrained=True)
+        resnet = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
         # eval mode for inference
         resnet.eval()
     # make sure to convert to jpg!!!

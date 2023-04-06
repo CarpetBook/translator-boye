@@ -2,10 +2,14 @@ import discord
 from discord import app_commands
 import openai
 import json
+import tenacity
+# openai handlers
 import text
 import audio
-import trans
 import images
+import moderation
+# experimental features
+import trans
 import ocr
 import resnet
 from memory import ChatMemory
@@ -54,22 +58,36 @@ for idx in chat_channel_ids:
     chat_memories[idx] = ChatMemory()
 
 
+@tenacity.retry(stop=tenacity.stop_after_attempt(3))
 async def textwithmem(
     msg: discord.Message, genprompt: str, prepend: str = None
 ):
     # yewser = msg.author.name
+
+    id = msg.channel.id
     max = 1024
     freq_pen = 0.75
     presence_pen = 0.75
     temp = 0.75
 
     try:
+        attachments = msg.attachments
+        txtread = ""
+        if len(attachments) > 0:
+            for attachment in attachments:
+                exts = attachment.filename.split(".")
+
+                if exts[-1] in TEXT_EXT:
+                    txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+
+        genprompt = genprompt + "\n" + txtread  # add text from attachments to message
+
         if genprompt[len(genprompt) - 1] == " ":
             genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
-        chat_memories[msg.channel.id].add("user", genprompt)
+        chat_memories[id].add("user", genprompt)
 
-        messages = chat_memories[msg.channel.id].get()
+        messages = chat_memories[id].get()
 
         res = await text.genchat(
             messages=messages,
@@ -87,23 +105,26 @@ async def textwithmem(
         # if len(generation) <= 1:
         #     return
 
-        await msg.reply(content=generation)
 
-        chat_memories[msg.channel.id].add("assistant", generation)
+        chat_memories[id].add("assistant", generation)
 
-        chat_memories[msg.channel.id].clean()
+        chat_memories[id].clean()
 
-        return 0  # ok
+        return ("success", generation)
 
-    except openai.error.OpenAIError as e:
-        return e  # not ok...
-    except openai.error.RateLimitError as e:
-        return e  # not ok...
-    except discord.errors.HTTPException:
-        await msg.channel.send(
-            """[The bot has either encountered an error, \
-            or the generated text was empty.]"""
-        )
+    # except openai.error.OpenAIError as e:
+    #     return e  # not ok...
+    # except openai.error.RateLimitError as e:
+    #     return e  # not ok...
+    # except openai.error.JSONSerializableError as e:
+    #     return e  # not ok...
+    # except openai
+    except discord.errors.HTTPException as e:
+        print(e)
+        return ("fail", e)
+    except Exception as e:
+        print(e)
+        return ("fail", e)
 
 
 @client.event
@@ -123,7 +144,17 @@ async def on_message(message: discord.Message):
         print("user: ", message.author.name)
         orig = message.content
         print(orig)
-        if orig.startswith("!"):
+
+        if message.channel.type == discord.ChannelType.private:
+            async with message.channel.typing():
+                res = await textwithmem(message, message.content)
+                if res[0] == "fail":
+                    await message.reply("Sorry, I'm having trouble right now. Please try again.")
+                    return
+                await message.reply(res[1])
+                return
+
+        elif orig.startswith("!"):
             orig = orig[1:]  # no !
             argies = orig.split(
                 " "
@@ -216,21 +247,16 @@ async def on_message(message: discord.Message):
                     await message.channel.send(restext)
                     return
 
-        elif idh in chat_channel_ids:
+                if com == "moderation":
+                    res = moderation.classify(fullprompt)
+                    if res[0] == "fail":
+                        await message.channel.send(f"something went wrong {res[1]}")
+                        return
+                    await message.reply(res[1])
+                    return
+
+        elif idh in chat_channel_ids or idh is None:
             # message.guild.id has to be string bc json won't accept int as key/property name
-            attachments = message.attachments
-            txtread = ""
-            if len(attachments) > 0:
-                for attachment in attachments:
-                    exts = attachment.filename.split(".")
-                    print(exts)
-                    print(attachment.filename)
-                    print(exts[-1])
-                    print(exts[-1] in TEXT_EXT)
-                    if exts[-1] in TEXT_EXT:
-                        txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
-            orig = message.content + \
-                " " + txtread  # add text from attachments to message
             ops = server_options.get(str(message.guild.id), None)
             prepense = server_options[str(message.guild.id)]["start_with"]
             if ops is not None:
@@ -242,13 +268,10 @@ async def on_message(message: discord.Message):
                     if prefix is not None:
                         orig = orig[len(prefix):]  # remove prefix
                     ret = await textwithmem(message, genprompt=orig, prepend=prepense)
-                    tries = 0
-                    if ret != 0:
-                        tries += 1
-                        if tries > 3:
-                            await message.channel.reply(content="Sorry, something's wrong. I tried three times, and they all gave errors. You may have to try again later, or contact hako.")
-                            return
-                        await textwithmem(message, genprompt=orig, prepend=prepense)
+                    if ret[0] == "fail":
+                        await message.channel.send(f"something went wrong {ret[1]}")
+                        return
+                    await message.reply(ret[1])
 
 
 def isNotClient():

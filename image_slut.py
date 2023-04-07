@@ -70,47 +70,46 @@ async def textwithmem(
     presence_pen = 0.75
     temp = 0.75
 
-    try:
-        attachments = msg.attachments
-        txtread = ""
-        if len(attachments) > 0:
-            for attachment in attachments:
-                exts = attachment.filename.split(".")
+    attachments = msg.attachments
+    txtread = ""
+    if len(attachments) > 0:
+        for attachment in attachments:
+            exts = attachment.filename.split(".")
 
-                if exts[-1] in TEXT_EXT:
-                    txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+            if exts[-1] in TEXT_EXT:
+                txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
-        genprompt = genprompt + "\n" + txtread  # add text from attachments to message
+    genprompt = genprompt + "\n" + txtread  # add text from attachments to message
 
-        if genprompt[len(genprompt) - 1] == " ":
-            genprompt = genprompt[:-1]  # remove trailing space for token optimization
+    if genprompt[len(genprompt) - 1] == " ":
+        genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
-        chat_memories[id].add("user", genprompt)
+    chat_memories[id].add("user", genprompt)
 
-        messages = chat_memories[id].get()
+    messages = chat_memories[id].get()
 
-        res = await text.genchat(
-            messages=messages,
-            max=max,
-            temp=temp,
-            freq=freq_pen,
-            pres=presence_pen
-        )
+    res = await text.genchat(
+        messages=messages,
+        max=max,
+        temp=temp,
+        freq=freq_pen,
+        pres=presence_pen
+    )
 
-        generation = res[1]
+    generation = res[1]
 
-        if prepend is not None:
-            generation = prepend + generation
+    if prepend is not None:
+        generation = prepend + generation
 
-        # if len(generation) <= 1:
-        #     return
+    # if len(generation) <= 1:
+    #     return
 
 
-        chat_memories[id].add("assistant", generation)
+    chat_memories[id].add("assistant", generation)
 
-        chat_memories[id].clean()
+    chat_memories[id].clean()
 
-        return ("success", generation)
+    return ("success", generation)
 
     # except openai.error.OpenAIError as e:
     #     return e  # not ok...
@@ -119,12 +118,12 @@ async def textwithmem(
     # except openai.error.JSONSerializableError as e:
     #     return e  # not ok...
     # except openai
-    except discord.errors.HTTPException as e:
-        print(e)
-        return ("fail", e)
-    except Exception as e:
-        print(e)
-        return ("fail", e)
+    # except discord.errors.HTTPException as e:
+    #     print(e)
+    #     return ("fail", e)
+    # except Exception as e:
+    #     print(e)
+    #     return ("fail", e)
 
 
 @client.event

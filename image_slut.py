@@ -151,6 +151,8 @@ async def textwithmem(
 
     chat_memories[id].clean()
 
+    # save_usage()
+
     return ("success", generation)
 
     # except openai.error.OpenAIError as e:

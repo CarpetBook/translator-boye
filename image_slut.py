@@ -58,11 +58,28 @@ for idx in chat_channel_ids:
     chat_memories[idx] = ChatMemory()
 
 
+def isChatChannel(id):
+    return id in chat_channel_ids
+
+
+def addChatChannel(id):
+    chat_channel_ids.append(id)
+    chat_memories[id] = ChatMemory()
+    save_settings()
+
+
+def verifyChatChannel(id):
+    verify = isChatChannel(id)
+    if not verify:
+        addChatChannel(id)
+    return verify
+
+
 @tenacity.retry(stop=tenacity.stop_after_attempt(3))
 async def textwithmem(
     msg: discord.Message, genprompt: str, prepend: str = None
 ):
-    # yewser = msg.author.name
+    verifyChatChannel(msg.channel.id)
 
     id = msg.channel.id
     max = 1024

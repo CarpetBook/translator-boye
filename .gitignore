@@ -13,3 +13,5 @@ bingus key.png
 tesseract_test.py
 testnotebooks/*
 settings.json
+logs/*
+ocr/*

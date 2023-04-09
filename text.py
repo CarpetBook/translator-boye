@@ -41,7 +41,7 @@ async def genchat(messages, max=512, temp=0, freq=1, pres=1):
         print(res)
         generation = res['choices'][0]['message']['content']
         return ("success", generation)
-    except openai.error.OpenAIError as e:
+    except Exception as e:
         return ("fail", e)
 
 

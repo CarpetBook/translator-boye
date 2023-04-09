@@ -339,10 +339,22 @@ def isNotClient():
     return app_commands.check(predicate)
 
 
-def serverKnown(guild_id):
-    print(guild_id)
-    print(guild_id in server_options)
-    return guild_id in server_options
+def serverKnown(id):
+    print(id)
+    print(id in server_options)
+    return id in server_options
+
+
+def addServer(id):
+    server_options[id] = {"can_chat": True, "start_with": "", "chat_prefix": None, "allow_images": True, "system": None, "starter": None}
+    return
+
+
+def verifyServer(id):
+    verify = serverKnown(str(id))
+    if not verify:
+        addServer(str(id))
+    return verify
 
 
 def serverAllowedChat(interaction: discord.Interaction):

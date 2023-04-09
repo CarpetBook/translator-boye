@@ -470,10 +470,16 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
 @tree.command(name="setprefix", description="Set the chat prefix for this server.")
 @app_commands.describe(prefix="new chat prefix, ideally one character")
 async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None):
+    verifyServer(interaction.channel.id)
     if prefix is None:
-        await interaction.response.send_message(content="Current prefix: " + server_options[str(interaction.guild.id)]["chat_prefix"])
+        await interaction.response.send_message(content="Current prefix: " + server_options[str(interaction.channel.id)]["chat_prefix"])
         return
-    server_options[str(interaction.guild.id)]["chat_prefix"] = prefix
+    if prefix.lower() in ["none", "null", "remove", "delete", "clear"]:
+        server_options[str(interaction.channel.id)]["chat_prefix"] = None
+        save_settings()
+        await interaction.response.send_message(content="Prefix removed.")
+        return
+    server_options[str(interaction.channel.id)]["chat_prefix"] = prefix
     save_settings()
     await interaction.response.send_message(content=f"Prefix set to `{prefix}`.")
     return

@@ -189,13 +189,22 @@ async def on_message(message: discord.Message):
         print(orig)
 
         if message.channel.type == discord.ChannelType.private:
-            async with message.channel.typing():
-                res = await textwithmem(message, message.content)
-                if res[0] == "fail":
-                    await message.reply("Sorry, I'm having trouble right now. Please try again.")
-                    return
-                await message.reply(res[1])
+            ops = server_options.get(str(message.channel.id), None)
+            prepense = server_options[str(message.channel.id)]["start_with"]
+            if ops is not None:
+                prefix = ops["chat_prefix"]
+            if not ops["can_chat"]:
                 return
+            if prefix is None or message.content.startswith(prefix):
+                if prefix is not None:
+                    orig = orig[len(prefix):]
+                async with message.channel.typing():
+                    res = await textwithmem(message, orig)
+                    if res[0] == "fail":
+                        await message.reply("Sorry, I'm having trouble right now. Please try again.")
+                        return
+                    await message.reply(res[1])
+                    return
 
         elif orig.startswith("!"):
             orig = orig[1:]  # no !

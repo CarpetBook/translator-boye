@@ -225,7 +225,14 @@ async def on_message(message: discord.Message):
                             return
                         dl_res = await images.downloadpic(attachments[0].url)
                     # await message.channel.send(f"saved as {dl_res}")
-                    await message.channel.send(ocr.run_ocr(dl_res))
+                    ocr_res = ocr.run_ocr(dl_res)
+                    if ocr_res[0] == "fail":
+                        await message.channel.send(f"something went wrong {ocr_res[1]}")
+                        return
+                    elif ocr_res[0] == "text":
+                        await message.channel.send(ocr_res[1])
+                    elif ocr_res[0] == "file":
+                        await message.channel.send(content=ocr_res[1], file=discord.File(ocr_res[2]))
                     return
 
                 if com == "resnet":

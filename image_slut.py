@@ -228,7 +228,7 @@ async def on_message(message: discord.Message):
                     await tree.sync()
                     return
 
-                if com == "transcribe" or com == "translate":
+                if com == "transcribe" or com == "translate" or com == "summarize":
                     valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
                     attachments = message.attachments
 

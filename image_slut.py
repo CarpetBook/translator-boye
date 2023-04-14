@@ -57,8 +57,7 @@ tik = tiktoken.get_encoding("cl100k_base")
 with open("keys.json") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
-    # TOKEN = wee["discord_token"]
-    TOKEN = "MTA3NzY4MTQ4MTIyMjIwMTM1NA.GWMfBn.brY5jQbK_4BKi0HQoaFz-7cX5KswqNqOZL73Ro"
+    TOKEN = wee["discord_token"]
 
 
 with open("settings.json") as setty:

@@ -1,4 +1,6 @@
 {
     "openai_key": "your openai key here",
-    "discord_token": "your discord bot token here"
+    "discord_token": "your discord bot token here",
+    "pinecone_key": "your pinecone api key here",
+    "pinecone_env": "your pinecone index environment here"
 }

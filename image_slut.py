@@ -127,13 +127,13 @@ async def textwithmem(
                 txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
     similartext = ""
-    if len(tik.encode(genprompt)) > 10:
+    if len(tik.encode(genprompt)) > 8:
         similars = vectors.query_similar_text(genprompt)
         print(similars)
         if len(similars) > 0:
-            similartext = "[System] Similar texts found in long term memory. Only use as reference.:\n"
-            for similar in similars:
-                similartext += f"{similar[0]}\n\n"
+            similartext = "Similar texts found in long term memory. Only use as reference.:\n"
+            for i in range(len(similars)):
+                similartext += f"{i}\n{similars[i][0]}\n\n"
     print(similartext)
 
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message

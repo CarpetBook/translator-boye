@@ -7,6 +7,8 @@ from typing import Union
 import tiktoken
 tik = tiktoken.get_encoding("cl100k_base")
 
+REQUIRED_CONFIDENCE = 0.75
+
 local_db = None
 try:
     with open("local_chatgpt_ltm.pickle", "rb") as f:
@@ -88,7 +90,7 @@ def query_similar_text(text: str, k: int = 3, namespace: str = "translator-boye"
     global pine_db
     vec = embed([text])[0]
     res = pine_db.query(vec, top_k=k, namespace=namespace)
-    texts = retrieve_text_by_id([i["id"] for i in res["matches"] if i["score"] > 0.8])
+    texts = retrieve_text_by_id([i["id"] for i in res["matches"] if i["score"] > REQUIRED_CONFIDENCE])
     scores = [i["score"] for i in res["matches"]]
     similars = list(zip(texts, scores))
     return similars

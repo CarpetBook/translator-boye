@@ -20,6 +20,9 @@ import vectors
 import asyncio
 import re
 
+import random
+import string
+
 from csv_logger import CsvLogger
 import logging
 
@@ -51,6 +54,19 @@ URL_REGEX = r"(?:\s|^)(https?:\/\/[^\s]+)"
 
 chat_channel_ids = []
 server_options = {}
+
+internal_password = None
+
+# define the length of your random string
+length = 10
+
+# create a list of all possible characters for your string
+characters = string.ascii_letters + string.digits + '!@#$%^&*()'
+
+# use the random.sample() function to generate a list of 'length' number of random characters from the 'characters' list
+internal_password = ''.join(random.sample(characters, length))
+
+print(f"Password: {internal_password}")
 
 tik = tiktoken.get_encoding("cl100k_base")
 
@@ -530,5 +546,29 @@ async def StartWithCommand(interaction: discord.Interaction, startwith: str = No
     save_settings()
     await interaction.response.send_message(content=f"Starting string set to `{startwith}`.")
     return
+
+
+@tree.command(name="shutdown", description="Shutdown the bot.")
+@app_commands.describe(password="get this from the console")
+async def ShutdownCommand(interaction: discord.Interaction, password: str = None):
+    global internal_password
+    if password is None:
+        print(internal_password)
+        await interaction.response.send_message(content="Please provide the password. It was printed in the console.")
+        return
+    if password != internal_password:
+        await interaction.response.send_message(content="Incorrect password.")
+        return
+    await interaction.response.send_message(content="Shutting down.")
+    print("Keyboard interrupt.")
+    for channel in chat_channel_ids:
+        chat_memories[channel].clear()
+        print(f"Cleared {channel}")
+    save_settings()
+    print("Saved settings")
+    print("byeeee")
+    await client.close()
+    return
+
 
 client.run(TOKEN)

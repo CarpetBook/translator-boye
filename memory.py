@@ -43,7 +43,7 @@ class ChatMemory:
         return self
 
     def get(self):
-        return self.memory
+        return list(self.memory)
 
     def setsystem(self, newprompt):
         self.system = newprompt

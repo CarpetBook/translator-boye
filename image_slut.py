@@ -12,7 +12,7 @@ import moderation
 import trans
 import ocr
 import resnet
-from memory import ChatMemory
+import summarizer
 
 import asyncio
 import re

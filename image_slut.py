@@ -326,8 +326,8 @@ async def on_message(message: discord.Message):
 
         elif idh in chat_channel_ids or idh is None:
             # message.guild.id has to be string bc json won't accept int as key/property name
-            ops = server_options.get(str(message.guild.id), None)
-            prepense = server_options[str(message.guild.id)]["start_with"]
+            ops = server_options.get(str(message.channel.id), None)
+            prepense = server_options[str(message.channel.id)]["start_with"]
             if ops is not None:
                 prefix = ops["chat_prefix"]
             if not ops["can_chat"]:

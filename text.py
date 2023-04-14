@@ -1,5 +1,6 @@
 import openai
 import requests
+import requester
 # import random
 # from transformers import GPT2TokenizerFast
 
@@ -30,7 +31,7 @@ async def gentext(genprompt, no_prompt=False, **kwargs):
 async def genchat(messages, max=512, temp=0, freq=1, pres=1):
     try:
         print(messages)
-        res = openai.ChatCompletion.create(
+        res = requester.chat(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=max,
@@ -38,6 +39,7 @@ async def genchat(messages, max=512, temp=0, freq=1, pres=1):
             frequency_penalty=freq,
             presence_penalty=pres
         )
+        res = res[1]
         print(res)
         generation = res['choices'][0]['message']['content']
         return ("success", generation)

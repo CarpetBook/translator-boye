@@ -76,7 +76,8 @@ class ChatMemory:
             text += f"\nAssistant: {assistant}"
             savetexts.append(text)
 
-        vectors.save_longterm_text(savetexts)
+        if len(savetexts) > 0:
+            vectors.save_longterm_text(savetexts)
 
         self.memory = []
         if self.system is not None:

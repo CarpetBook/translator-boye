@@ -253,8 +253,8 @@ async def on_message(message: discord.Message):
                 print("fullprompt: ", fullprompt)
 
                 if com == "sync":
-                    tree.copy_global_to(guild=discord.Object(id=848149296054272000))
-                    tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
+                    # tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+                    # tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
                     await tree.sync(guild=discord.Object(id=848149296054272000))
                     await tree.sync(guild=discord.Object(id=1072352297503440936))
                     await tree.sync()

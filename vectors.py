@@ -84,10 +84,10 @@ def save_longterm_text(texts: list, namespace: str = "translator-boye"):
     upsert_embeddings(ids, vecs, namespace=namespace)
 
 
-def query_similar_text(text: str, namespace: str = "translator-boye"):
+def query_similar_text(text: str, k: int = 3, namespace: str = "translator-boye"):
     global pine_db
     vec = embed([text])[0]
-    res = pine_db.query(vec, top_k=3, namespace=namespace)
+    res = pine_db.query(vec, top_k=k, namespace=namespace)
     texts = retrieve_text_by_id([i["id"] for i in res["matches"] if i["score"] > 0.8])
     scores = [i["score"] for i in res["matches"]]
     similars = list(zip(texts, scores))

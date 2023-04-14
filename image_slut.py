@@ -417,15 +417,16 @@ def serverAllowedImage(interaction: discord.Interaction):
 
 @tree.command(name="clear", description="Clear the chat history for this channel.")
 async def ClearCommand(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
     if channelid is None:
-        await interaction.response.send_message(content="Something bad happened.")
+        await interaction.followup.send(content="Something bad happened.")
         return
     if channelid in chat_channel_ids:
         chat_memories[channelid].clear()
-        await interaction.response.send_message(content="i forgor :skull:\nChat memory has been cleared.")
+        await interaction.followup.send(content="i forgor :skull:\nChat memory has been cleared.")
     else:
-        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        await interaction.followup.send(content="Current channel is not a chat channel.")
     return
 
 

@@ -256,6 +256,16 @@ async def on_message(message: discord.Message):
                         asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1]))
                     elif com == "translate":
                         asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1], task="translate"))
+                    elif com == "summarize":
+                        res = await trans.transcriber(message, dl_res[1], model_override="small", return_result=True)
+                        sum_msg = await message.channel.send("Summarizing...")
+                        sum_res = await summarizer.summarizeLongText(res)
+                        if (sum_res[0] == "fail"):
+                            await sum_msg.delete()
+                            await message.channel.send(f"something went wrong {sum_res[1]}")
+                            return
+                        await sum_msg.delete()
+                        await message.reply(sum_res[1])
                     return
 
                 if com == "testytlink":

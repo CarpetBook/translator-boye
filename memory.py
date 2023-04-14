@@ -44,8 +44,9 @@ class ChatMemory:
                 assistant = self.memory[0]["content"]
                 self.memory = self.memory[1:]
             if user is not None:
-                text = f"User: {user}"
-            text += f"\nAssistant: {assistant}"
+                text = f"User: {user}\n"
+            text += f"Assistant: {assistant}"
+            vectors.save_longterm_text([text])
             # self.memory = self.memory[3:]  # if chat memory is longer than 20 messages, cut off the oldest two
             if self.system is not None:
                 self.memory.insert(0, {"role": "system", "content": self.system})

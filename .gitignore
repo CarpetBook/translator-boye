@@ -15,3 +15,4 @@ testnotebooks/*
 settings.json
 logs/*
 ocr/*
+local_chatgpt_ltm.pickle

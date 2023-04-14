@@ -8,11 +8,14 @@ import text
 import audio
 import images
 import moderation
+from memory import ChatMemory
+import tiktoken
 # experimental features
 import trans
 import ocr
 import resnet
 import summarizer
+import vectors
 
 import asyncio
 import re
@@ -48,6 +51,8 @@ URL_REGEX = r"(?:\s|^)(https?:\/\/[^\s]+)"
 
 chat_channel_ids = []
 server_options = {}
+
+tik = tiktoken.get_encoding("cl100k_base")
 
 with open("keys.json") as filey:
     wee = json.load(filey)
@@ -121,6 +126,16 @@ async def textwithmem(
             if exts[-1] in TEXT_EXT:
                 txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
+    similartext = ""
+    if len(tik.encode(genprompt)) > 10:
+        similars = vectors.query_similar_text(genprompt)
+        print(similars)
+        if len(similars) > 0:
+            similartext = "[System] Similar texts found in long term memory. Only use as reference.:\n"
+            for similar in similars:
+                similartext += f"{similar[0]}\n\n"
+    print(similartext)
+
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message
 
     if genprompt[len(genprompt) - 1] == " ":
@@ -129,6 +144,8 @@ async def textwithmem(
     chat_memories[id].add("user", genprompt)
 
     messages = chat_memories[id].get()
+    if len(similartext) > 0:
+        messages.append({"role": "system", "content": similartext})
 
     res = await text.genchat(
         messages=messages,

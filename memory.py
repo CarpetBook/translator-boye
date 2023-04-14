@@ -1,7 +1,9 @@
 # ChatMemory class that manages the chat history in a single channel
+import vectors
+
 
 class ChatMemory:
-    def __init__(self, min_message_limit=15, max_message_limit=40):
+    def __init__(self, min_message_limit=5, max_message_limit=10):
         self.memory = []
         self.system = None
         self.starter = None
@@ -27,14 +29,54 @@ class ChatMemory:
 
     def clean(self):
         while len(self.memory) > self.max_message_limit:  # if the prompt is too long, cut off the oldest message... keep a minimum amount of messages
-            self.memory = self.memory[
-                2:
-            ]  # if chat memory is longer than 20 messages, cut off the oldest two
-            self.memory.insert(0, {"role": "system", "content": self.system})
+            user = None
+            assistant = None
+            text = ""
+            if self.memory[0]["role"] == "system":
+                user = self.memory[1]["content"]
+                assistant = self.memory[2]["content"]
+                self.memory = self.memory[3:]
+            elif self.memory[0]["role"] == "user":
+                user = self.memory[0]["content"]
+                assistant = self.memory[1]["content"]
+                self.memory = self.memory[2:]
+            elif self.memory[0]["role"] == "assistant":
+                assistant = self.memory[0]["content"]
+                self.memory = self.memory[1:]
+            if user is not None:
+                text = f"User: {user}"
+            text += f"\nAssistant: {assistant}"
+            # self.memory = self.memory[3:]  # if chat memory is longer than 20 messages, cut off the oldest two
+            if self.system is not None:
+                self.memory.insert(0, {"role": "system", "content": self.system})
             print(len(self.memory))
             # print(fullprom)
 
+
     def clear(self):
+        savetexts = []
+        while len(self.memory) > 0:
+            user = None
+            assistant = None
+            text = ""
+            if self.memory[0]["role"] == "system":
+                user = self.memory[1]["content"]
+                assistant = self.memory[2]["content"]
+                self.memory = self.memory[3:]
+            elif self.memory[0]["role"] == "user":
+                user = self.memory[0]["content"]
+                assistant = self.memory[1]["content"]
+                self.memory = self.memory[2:]
+            elif self.memory[0]["role"] == "assistant":
+                assistant = self.memory[0]["content"]
+                self.memory = self.memory[1:]
+            if user is not None:
+                text = f"User: {user}"
+            text += f"\nAssistant: {assistant}"
+            savetexts.append(text)
+
+        vectors.save_longterm_text(savetexts)
+
         self.memory = []
         if self.system is not None:
             self.add("system", self.system)

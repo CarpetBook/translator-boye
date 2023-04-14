@@ -5,15 +5,22 @@ import langcodes
 from whisper.utils import get_writer
 
 model = None
+modeltype = None
 trans_exts = ["txt", "vtt", "srt", "tsv", "json"]
 
 
-async def transcriber(respond: discord.Message, file, task="transcribe"):
+async def transcriber(respond: discord.Message, file, task="transcribe", model_override="large-v2", return_result=False):
     global model
+    global modeltype
+
+    if modeltype != model_override:
+        model = None
+        modeltype = model_override
+
     wait = None
     if model is None:
         wait = await respond.channel.send("Loading model...")
-        model = whisper.load_model("large-v2")
+        model = whisper.load_model(model_override)
         await wait.delete()
     editmsg = await respond.channel.send(content="Transcribing...")
     result = model.transcribe(file, verbose=True, task=task, compression_ratio_threshold=2)
@@ -35,6 +42,14 @@ async def transcriber(respond: discord.Message, file, task="transcribe"):
 
     # print the recognized text
     print(result)
+
+    # if they want the raw text, return it
+    if return_result:
+        newtext = ""
+        for segment in result["segments"]:
+            newtext += segment["text"] + " "
+        await editmsg.delete()
+        return newtext
 
     # result[text] doesn't have newlines
     # use the segments and split by \n

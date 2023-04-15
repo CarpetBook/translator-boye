@@ -554,7 +554,7 @@ async def StartWithCommand(interaction: discord.Interaction, startwith: str = No
 async def ShutdownCommand(interaction: discord.Interaction, password: str = None):
     global internal_password
     if password is None:
-        print(internal_password)
+        print(f"Someone used /shutdown. Password: {internal_password}")
         await interaction.response.send_message(content="Please provide the password. It was printed in the console.")
         return
     if password != internal_password:

@@ -142,13 +142,12 @@ async def textwithmem(
                 txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
     similartext = ""
-    if len(tik.encode(genprompt)) > 8:
-        similars = vectors.query_similar_text(genprompt)
-        print(similars)
-        if len(similars) > 0:
-            similartext = "Similar texts found in long term memory. Only use as reference.:\n"
-            for i in range(len(similars)):
-                similartext += f"{i}\n{similars[i][0]}\n\n"
+    similars = vectors.query_similar_text(genprompt, k=2)
+    print(similars)
+    if len(similars) > 0:
+        similartext = "[System] Past messages found in memory. These may not be related to the current conversation.\n"
+        for i in range(len(similars)):
+            similartext += f"{similars[i][0]}\n\n...\n\n"
     print(similartext)
 
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message
@@ -158,9 +157,10 @@ async def textwithmem(
 
     chat_memories[id].add("user", genprompt)
 
-    messages = chat_memories[id].get()
     if len(similartext) > 0:
-        messages.append({"role": "system", "content": similartext})
+        chat_memories[id].add("system", similartext)
+
+    messages = chat_memories[id].get()
 
     res = await text.genchat(
         messages=messages,

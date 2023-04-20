@@ -126,13 +126,14 @@ def verifyChatChannel(id):
 async def textwithmem(
     msg: discord.Message, genprompt: str, prepend: str = None
 ):
+    global temp
     verifyChatChannel(msg.channel.id)
 
     id = msg.channel.id
     max = 1024
     freq_pen = 0.75
     presence_pen = 0.75
-    temp = 0.75
+    # temp = 0.75
 
     attachments = msg.attachments
     txtread = ""

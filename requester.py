@@ -20,7 +20,8 @@ def chat(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "frequency_penalty": frequency_penalty,
-        "presence_penalty": presence_penalty
+        "presence_penalty": presence_penalty,
+        # "logit_bias": {"459": -0.8, "15592": -100, "4221": -100, "1646": -100}
     }
 
     start = time.time()

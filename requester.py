@@ -35,6 +35,29 @@ def chat(
         return ("success", res.json())
 
 
+def embedding(
+        model: str = "text-embedding-ada-002",
+        input: list = None
+):
+    embedurl = "https://api.openai.com/v1/embeddings"
+    headers = {"Content-Type": "application/json", "Authorization": "Bearer " + openai.api_key}
+    data = {
+        "model": model,
+        "input": input
+    }
+
+    start = time.time()
+    res = requests.post(embedurl, headers=headers, json=data)
+    end = time.time()
+
+    print(f"[Requester] Time to embed {len(input)} texts: {end - start} seconds")
+
+    if res.status_code != 200:
+        return ("fail", res.status_code)
+    else:
+        return ("success", res.json())
+
+
 if __name__ == "__main__":
     with open("keys.json") as filey:
         wee = json.load(filey)

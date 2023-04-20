@@ -56,7 +56,7 @@ class ChatMemory:
 
     def clear(self):
         savetexts = []
-        while len(self.memory) > 0:
+        while len(self.memory) >= 2:
             user = None
             assistant = None
             text = ""

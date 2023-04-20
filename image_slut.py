@@ -238,7 +238,9 @@ async def on_message(message: discord.Message):
                     if res[0] == "fail":
                         await message.reply("Sorry, I'm having trouble right now. Please try again.")
                         return
-                    await message.reply(res[1])
+                    big = longMessage(res[1])
+                    for i in big:
+                        await message.reply(i)
                     return
 
         elif orig.startswith("!"):
@@ -375,7 +377,15 @@ async def on_message(message: discord.Message):
                     if ret[0] == "fail":
                         await message.channel.send(f"something went wrong {ret[1]}")
                         return
-                    await message.reply(ret[1])
+                    big = longMessage(ret[1])
+                    for i in big:
+                        await message.reply(i)
+
+
+def longMessage(text):
+    if len(text) > 1900:
+        for i in range(0, len(text), 1900):
+            yield text[i:i + 1900]
 
 
 def isNotClient():

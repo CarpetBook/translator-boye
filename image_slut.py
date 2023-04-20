@@ -57,6 +57,7 @@ chat_channel_ids = []
 server_options = {}
 
 internal_password = None
+temp = 0.75  # chatgpt temperature
 
 # define the length of your random string
 length = 10

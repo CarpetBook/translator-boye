@@ -236,7 +236,11 @@ async def on_message(message: discord.Message):
                     if res[0] == "fail":
                         await message.reply("Sorry, I'm having trouble right now. Please try again.")
                         return
-                    await message.reply(res[1])
+                        #TODO: instead of just printing an error, save to file and send the attatchment or smth
+                    if len(res[1]) > 2000:
+                        await message.reply("Sorry, but that generation would have been over the character limit.")
+                    else
+                        await message.reply(res[1])
                     return
 
         elif orig.startswith("!"):

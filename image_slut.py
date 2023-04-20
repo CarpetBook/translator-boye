@@ -383,9 +383,8 @@ async def on_message(message: discord.Message):
 
 
 def longMessage(text):
-    if len(text) > 1900:
-        for i in range(0, len(text), 1900):
-            yield text[i:i + 1900]
+    for i in range(0, len(text), 1900):
+        yield text[i:i + 1900]
 
 
 def isNotClient():

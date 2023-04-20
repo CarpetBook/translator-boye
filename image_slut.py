@@ -456,17 +456,18 @@ async def UnChatCommand(interaction: discord.Interaction):
 
 @tree.command(name="system-prompt", description="Set the system prompt for ChatGPT.")
 async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = None, noclear: bool = False):
+    await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
 
     if channelid not in chat_channel_ids:
-        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        await interaction.followup.send(content="Current channel is not a chat channel.")
         return
 
     if prompt is None:
         if chat_memories[channelid].system is not None:
-            await interaction.response.send_message(content=f"```{chat_memories[channelid].system}```")
+            await interaction.followup.send(content=f"```{chat_memories[channelid].system}```")
             return
-        await interaction.response.send_message(content="No system prompt set.")
+        await interaction.followup.send(content="No system prompt set.")
         return
 
     chat_memories[channelid].setsystem(prompt)
@@ -474,7 +475,7 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
         prompt = prompt[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
-    await interaction.response.send_message(content=f"System message changed.\n```{prompt}```\nMemory cleared.")
+    await interaction.followup.send(content=f"System message changed.\n```{prompt}```\nMemory cleared.")
     return
 
 
@@ -483,22 +484,23 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
 @app_commands.describe(delete="delete the starter message")
 @app_commands.describe(noclear="don't clear the chat memory")
 async def StarterMessageCommand(interaction: discord.Interaction, starter: str = None, delete: bool = False, noclear: bool = False):
+    await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
 
     if channelid not in chat_channel_ids:
-        await interaction.response.send_message(content="Current channel is not a chat channel.")
+        await interaction.followup.send(content="Current channel is not a chat channel.")
         return
 
     if delete:
         chat_memories[channelid].setstarter(None)
-        await interaction.response.send_message(content="Starter message deleted.")
+        await interaction.followup.send(content="Starter message deleted.")
         return
 
     if starter is None:
         if chat_memories[channelid].starter is not None:
-            await interaction.response.send_message(content=f"```{chat_memories[channelid].starter}```")
+            await interaction.followup.send(content=f"```{chat_memories[channelid].starter}```")
             return
-        await interaction.response.send_message(content="No starter message set.")
+        await interaction.followup.send(content="No starter message set.")
         return
 
     chat_memories[channelid].setstarter(starter)
@@ -506,7 +508,7 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
         starter = starter[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
-    await interaction.response.send_message(content=f"Starter message changed.\n```{starter}```")
+    await interaction.followup.send(content=f"Starter message changed.\n```{starter}```")
     return
 
 

@@ -574,4 +574,32 @@ async def ShutdownCommand(interaction: discord.Interaction, password: str = None
     return
 
 
+@tree.command(name="remove-embed", description="Remove embeddings from the database. Requires the password.")
+@app_commands.describe(ids="comma separated list of ids")
+@app_commands.describe(password="get this from the console")
+async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, password: str = None):
+    await interaction.response.defer(thinking=True)  # think hard
+    global internal_password
+    if password is None:
+        await interaction.followup.send(content="Please provide the password. It was printed in the console.")
+        return
+    if password != internal_password:
+        await interaction.followup.send(content="Incorrect password.")
+        return
+    if ids is None:
+        await interaction.followup.send(content="Please provide the ids of the embeddings to remove.")
+        return
+    ids = ids.split(",")
+    try:
+        for id in ids:
+            id = str(int(id.strip()))
+    except ValueError:
+        await interaction.followup.send(content="Invalid ids.")
+    vectors.remove_local_text(ids)
+    vectors.remove_embeddings(ids)
+    save_settings()
+    await interaction.followup.send(content="Embeddings removed.")
+    return
+
+
 client.run(TOKEN)

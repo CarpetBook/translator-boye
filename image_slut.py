@@ -603,4 +603,23 @@ async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, 
     return
 
 
+@tree.command(name="temperature", description="Set the temperature of ChatGPT's reponses.")
+@app_commands.describe(temperature="new temperature (0.0 - 2.0)")
+async def TemperatureCommand(interaction: discord.Interaction, temperature: float = None):
+    await interaction.response.defer(thinking=True)  # think hard
+    global temp
+    if temperature is None:
+        await interaction.followup.send(content=f"Current temperature: {temp}")
+        return
+    newtemp = 0
+    try:
+        newtemp = float(temperature)
+        if newtemp < 0.0 or newtemp > 2.0:
+            raise ValueError
+    except ValueError:
+        await interaction.followup.send(content="Temperature must be a number between 0.0 and 2.0.")
+        return
+    temp = newtemp
+    await interaction.followup.send(content=f"Temperature set to {newtemp}.")
+    return
 client.run(TOKEN)

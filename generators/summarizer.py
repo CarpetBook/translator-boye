@@ -1,4 +1,4 @@
-import text
+from generators import text
 import tiktoken
 
 tik = tiktoken.get_encoding("cl100k_base")

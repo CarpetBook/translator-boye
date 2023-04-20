@@ -3,6 +3,8 @@ keys.json
 imageslut_pics/*
 edit_pics/*
 __pycache__/*
+generators/__pycache__/*
+tools/__pycache__/*
 loggy
 nohup.out
 .vscode/*

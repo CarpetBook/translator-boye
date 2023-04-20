@@ -3,19 +3,20 @@ from discord import app_commands
 import openai
 import json
 import tenacity
-# openai handlers
-import text
-import audio
-import images
-import moderation
-from memory import ChatMemory
 import tiktoken
-# experimental features
-import trans
-import ocr
-import resnet
-import summarizer
-import vectors
+# generators
+from generators import text
+from generators import audio
+from generators import images
+from generators import summarizer
+from generators import trans
+
+# experimental features and tools
+from tools.memory import ChatMemory
+from tools import ocr
+from tools import resnet
+from tools import moderation
+from tools import vectors
 
 import asyncio
 import re

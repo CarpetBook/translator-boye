@@ -1,5 +1,5 @@
 import openai
-import requester 
+from tools import requester 
 import pinecone
 import pickle
 import json

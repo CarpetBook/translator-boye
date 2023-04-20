@@ -1,5 +1,5 @@
 # ChatMemory class that manages the chat history in a single channel
-import vectors
+from tools import vectors
 
 
 class ChatMemory:

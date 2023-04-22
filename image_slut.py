@@ -148,9 +148,10 @@ async def textwithmem(
     similars = vectors.query_similar_text(genprompt, k=2)
     print(similars)
     if len(similars) > 0:
-        similartext = "[System] Past messages found in memory. These may not be related to the current conversation.\n"
+        similartext = "*thinking* I remember a few conversations like this.\n"
         for i in range(len(similars)):
             similartext += f"{similars[i][0]}\n\n...\n\n"
+        similartext += "*thinking* So I'll try to answer the user's question based on that.\n"
     print(similartext)
 
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message
@@ -160,10 +161,10 @@ async def textwithmem(
 
     chat_memories[id].add("user", genprompt)
 
-    if len(similartext) > 0:
-        chat_memories[id].add("system", similartext)
-
     messages = chat_memories[id].get()
+
+    if len(similartext) > 0:
+        messages.append({"role": "assistant", "content": similartext})
 
     res = await text.genchat(
         messages=messages,

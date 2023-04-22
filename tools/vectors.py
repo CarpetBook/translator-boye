@@ -8,7 +8,7 @@ from typing import Union
 import tiktoken
 tik = tiktoken.get_encoding("cl100k_base")
 
-REQUIRED_CONFIDENCE = 0.80
+REQUIRED_CONFIDENCE = 0.75
 default_namespace = "translator-boye"
 
 local_db = None

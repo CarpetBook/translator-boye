@@ -11,6 +11,9 @@ tik = tiktoken.get_encoding("cl100k_base")
 REQUIRED_CONFIDENCE = 0.75
 default_namespace = "translator-boye"
 
+QUERIES_DISABLED = True
+UPSERT_DISABLED = False
+
 local_db = None
 try:
     with open("local_chatgpt_ltm.pickle", "rb") as f:
@@ -105,6 +108,8 @@ def save_longterm_text(texts: list, namespace: str = default_namespace):
 
 
 def query_similar_text(text: str, k: int = 3, namespace: str = default_namespace):
+    if QUERIES_DISABLED:
+        return []
     global pine_db
     vec = embed([text])[0]
     res = pine_db.query(vec, top_k=k, namespace=namespace)

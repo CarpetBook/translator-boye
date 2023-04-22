@@ -483,12 +483,16 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
         await interaction.followup.send(content="No system prompt set.")
         return
 
+    if prompt in ["clear", "delete", "none"]:
+        chat_memories[channelid].setsystem(None)
+        await interaction.followup.send(content="System prompt cleared.")
+        return
     chat_memories[channelid].setsystem(prompt)
     if len(prompt) > 1900:
         prompt = prompt[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
-    await interaction.followup.send(content=f"System message changed.\n```{prompt}```\nMemory cleared.")
+    await interaction.followup.send(content=f"System prompt changed.\n```{prompt}```\nMemory cleared.")
     return
 
 
@@ -634,4 +638,6 @@ async def TemperatureCommand(interaction: discord.Interaction, temperature: floa
     temp = newtemp
     await interaction.followup.send(content=f"Temperature set to {newtemp}.")
     return
+
+
 client.run(TOKEN)

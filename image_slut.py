@@ -21,6 +21,9 @@ from tools import vectors
 import asyncio
 import re
 
+import time
+import statistics
+
 import random
 import string
 
@@ -206,6 +209,113 @@ async def textwithmem(
     #     return ("fail", e)
 
 
+# @tenacity.retry(stop=tenacity.stop_after_attempt(3))
+async def textwithmem_stream(
+    msg: discord.Message, genprompt: str, prepend: str = None
+):
+    global temp
+    verifyChatChannel(msg.channel.id)
+
+    id = msg.channel.id
+    max = 1024
+    freq_pen = 0.75
+    presence_pen = 0.75
+    # temp = 0.75
+
+    attachments = msg.attachments
+    txtread = ""
+    if len(attachments) > 0:
+        for attachment in attachments:
+            exts = attachment.filename.split(".")
+
+            if exts[-1] in TEXT_EXT:
+                txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+
+    genprompt = genprompt + "\n" + txtread  # add text from attachments to message
+
+    if genprompt[len(genprompt) - 1] == " ":
+        genprompt = genprompt[:-1]  # remove trailing space for token optimization
+
+    chat_memories[id].add("user", genprompt)
+
+    messages = chat_memories[id].get()
+
+    resgen = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        max_tokens=max,
+        temperature=temp,
+        frequency_penalty=freq_pen,
+        presence_penalty=presence_pen,
+        stream=True
+    )
+
+    start_time = time.time()
+    last_chunk = 0
+    last_send = 0
+    delays = []
+    chunks = []
+    chunkres = ""
+    done = False
+    editguy = await msg.reply("...")
+    for chunk in resgen:
+        chunk_time = time.time() - start_time
+        chunkdelay = chunk_time - last_chunk
+        delays.append(chunkdelay)
+
+        tokenpersecond = 1 / statistics.mean(delays)
+
+        chunks.append(chunk)  # save the event response
+
+        chunk_message = chunk['choices'][0]['delta']  # extract the message
+
+        if chunk_message.get("role") == "assistant":
+            pass
+        elif chunk_message.get("content") is not None:
+            chunkres += chunk_message.get("content")
+        elif chunk_message.get("content") is None:
+            done = True
+
+        print(f"avg delay: {round(statistics.mean(delays), 2)}", chunk_time, last_send, f"difference: {chunk_time - last_send}", end="\r")
+
+        if chunk_time - last_send >= 1:
+            last_send = chunk_time
+            await editguy.edit(content=f"Average tokens/sec: {round(tokenpersecond, 2)}\n" + chunkres + "...")
+
+        if done:
+            break
+
+        last_chunk = chunk_time
+
+    await editguy.edit(content=chunkres)
+
+    print("\n")
+
+    # if len(generation) <= 1:
+    #     return
+
+
+    chat_memories[id].add("assistant", chunkres)
+
+    chat_memories[id].clean()
+
+    # save_usage()
+
+    # except openai.error.OpenAIError as e:
+    #     return e  # not ok...
+    # except openai.error.RateLimitError as e:
+    #     return e  # not ok...
+    # except openai.error.JSONSerializableError as e:
+    #     return e  # not ok...
+    # except openai
+    # except discord.errors.HTTPException as e:
+    #     print(e)
+    #     return ("fail", e)
+    # except Exception as e:
+    #     print(e)
+    #     return ("fail", e)
+
+
 @client.event
 async def on_ready():
     print("Hi! I'm ready!")
@@ -360,6 +470,10 @@ async def on_message(message: discord.Message):
                         await message.channel.send(f"something went wrong {res[1]}")
                         return
                     await message.reply(res[1])
+                    return
+
+                if com == "teststream":
+                    await textwithmem_stream(message, genprompt=fullprompt)
                     return
 
         elif idh in chat_channel_ids or idh is None:

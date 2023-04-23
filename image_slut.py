@@ -345,14 +345,7 @@ async def on_message(message: discord.Message):
                 if prefix is not None:
                     orig = orig[len(prefix):]
                 async with message.channel.typing():
-                    res = await textwithmem(message, orig)
-                    if res[0] == "fail":
-                        await message.reply("Sorry, I'm having trouble right now. Please try again.")
-                        return
-                    big = longMessage(res[1])
-                    for i in big:
-                        await message.reply(i)
-                    return
+                    await textwithmem_stream(message, orig)
 
         elif orig.startswith("!"):
             orig = orig[1:]  # no !
@@ -488,13 +481,7 @@ async def on_message(message: discord.Message):
                 async with message.channel.typing():
                     if prefix is not None:
                         orig = orig[len(prefix):]  # remove prefix
-                    ret = await textwithmem(message, genprompt=orig, prepend=prepense)
-                    if ret[0] == "fail":
-                        await message.channel.send(f"something went wrong {ret[1]}")
-                        return
-                    big = longMessage(ret[1])
-                    for i in big:
-                        await message.reply(i)
+                    await textwithmem(message, genprompt=orig, prepend=prepense)
 
 
 def longMessage(text):

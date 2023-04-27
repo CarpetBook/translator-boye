@@ -276,20 +276,18 @@ async def textwithmem_stream(
         elif chunk_message.get("content") is None:
             done = True
 
-        print(f"avg delay: {round(statistics.mean(delays), 2)}", chunk_time, last_send, f"difference: {chunk_time - last_send}", end="\r")
+        # print(f"avg delay: {round(statistics.mean(delays), 2)}", chunk_time, last_send, f"difference: {chunk_time - last_send}", end="\r")
 
         if chunk_time - last_send >= 1:
             last_send = chunk_time
-            await editguy.edit(content=f"Average tokens/sec: {round(tokenpersecond, 2)}\n" + chunkres + "...")
-
+            await editguy.edit(content=chunkres + "...")
+        # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" + 
         if done:
             break
 
         last_chunk = chunk_time
 
     await editguy.edit(content=chunkres)
-
-    print("\n")
 
     # if len(generation) <= 1:
     #     return

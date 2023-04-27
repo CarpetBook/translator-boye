@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands
+from discord.ext import commands
 import openai
 import json
 import tenacity
@@ -96,8 +97,8 @@ def save_settings():
 
 botintents = discord.Intents(messages=True, message_content=True)
 activity = discord.Activity(name="for your questions", type=discord.ActivityType.watching)
-client = discord.Client(intents=botintents, activity=activity)
-tree = app_commands.CommandTree(client)
+
+bot = commands.Bot(command_prefix="!", intents=botintents, activity=activity)
 
 
 chat_memories = {}
@@ -314,20 +315,25 @@ async def textwithmem_stream(
     #     return ("fail", e)
 
 
-@client.event
+# @client.event
+# async def on_ready():
+#     print("Hi! I'm ready!")
+
+
+@bot.listen("on_ready")
 async def on_ready():
     print("Hi! I'm ready!")
 
 
-@client.event
-async def on_message(message: discord.Message):
+@bot.listen("on_message")
+async def text_commands(message: discord.Message):
     global token_thresh
     global ai_pre_msg
     global ai_name
 
     idh = message.channel.id
 
-    if message.author.id != client.user.id:
+    if message.author.id != bot.user.id:
         print("user: ", message.author.name)
         orig = message.content
         print(orig)
@@ -362,9 +368,9 @@ async def on_message(message: discord.Message):
                 if com == "sync":
                     # tree.copy_global_to(guild=discord.Object(id=848149296054272000))
                     # tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
-                    await tree.sync(guild=discord.Object(id=848149296054272000))
-                    await tree.sync(guild=discord.Object(id=1072352297503440936))
-                    await tree.sync()
+                    await bot.tree.sync(guild=discord.Object(id=848149296054272000))
+                    await bot.tree.sync(guild=discord.Object(id=1072352297503440936))
+                    await bot.tree.sync()
                     return
 
                 if com == "transcribe" or com == "translate" or com == "summarize":
@@ -479,7 +485,7 @@ async def on_message(message: discord.Message):
                 async with message.channel.typing():
                     if prefix is not None:
                         orig = orig[len(prefix):]  # remove prefix
-                    await textwithmem(message, genprompt=orig, prepend=prepense)
+                    await textwithmem_stream(message, genprompt=orig, prepend=prepense)
 
 
 def longMessage(text):
@@ -487,9 +493,9 @@ def longMessage(text):
         yield text[i:i + 1900]
 
 
-def isNotClient():
+def isNotBot():
     def predicate(interaction: discord.Interaction) -> bool:
-        return interaction.user.id != client.user.id
+        return interaction.user.id != bot.user.id
     return app_commands.check(predicate)
 
 
@@ -527,7 +533,7 @@ def serverAllowedImage(interaction: discord.Interaction):
     return serverKnown(ids) and server_options[ids]["allow_images"]
 
 
-@tree.command(name="clear", description="Clear the chat history for this channel.")
+@bot.tree.command(name="clear", description="Clear the chat history for this channel.")
 async def ClearCommand(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
@@ -542,7 +548,7 @@ async def ClearCommand(interaction: discord.Interaction):
     return
 
 
-@tree.command(name="setchat", description="Make this channel a chat channel.")
+@bot.tree.command(name="setchat", description="Make this channel a chat channel.")
 async def SetChatCommand(interaction: discord.Interaction):
     if interaction.channel_id in chat_channel_ids:
         await interaction.response.send_message(content="This channel is already a chat channel.")
@@ -554,7 +560,7 @@ async def SetChatCommand(interaction: discord.Interaction):
     return
 
 
-@tree.command(name="unchat", description="Remove chat from this channel.")
+@bot.tree.command(name="unchat", description="Remove chat from this channel.")
 async def UnChatCommand(interaction: discord.Interaction):
     if interaction.channel_id not in chat_channel_ids:
         await interaction.response.send_message(content="This channel is not a chat channel.")
@@ -566,7 +572,7 @@ async def UnChatCommand(interaction: discord.Interaction):
     return
 
 
-@tree.command(name="system-prompt", description="Set the system prompt for ChatGPT.")
+@bot.tree.command(name="system-prompt", description="Set the system prompt for ChatGPT.")
 async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = None, noclear: bool = False):
     await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
@@ -595,7 +601,7 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
     return
 
 
-@tree.command(name="starter-message", description="Add a starting assistant message to give context.")
+@bot.tree.command(name="starter-message", description="Add a starting assistant message to give context.")
 @app_commands.describe(starter="assistant's starting message")
 @app_commands.describe(delete="delete the starter message")
 @app_commands.describe(noclear="don't clear the chat memory")
@@ -628,7 +634,7 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
     return
 
 
-@tree.command(name="setprefix", description="Set the chat prefix for this server.")
+@bot.tree.command(name="setprefix", description="Set the chat prefix for this server.")
 @app_commands.describe(prefix="new chat prefix, ideally one character")
 async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None):
     verifyServer(interaction.channel.id)
@@ -646,7 +652,7 @@ async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None)
     return
 
 
-@tree.command(name="startwith", description="Always prepend a response with a certain string.")
+@bot.tree.command(name="startwith", description="Always prepend a response with a certain string.")
 @app_commands.describe(startwith="string to prepend")
 @app_commands.describe(remove="stops prepending a string")
 async def StartWithCommand(interaction: discord.Interaction, startwith: str = None, remove: bool = None):
@@ -667,7 +673,7 @@ async def StartWithCommand(interaction: discord.Interaction, startwith: str = No
     return
 
 
-@tree.command(name="shutdown", description="Shutdown the bot.")
+@bot.tree.command(name="shutdown", description="Shutdown the bot.")
 @app_commands.describe(password="get this from the console")
 async def ShutdownCommand(interaction: discord.Interaction, password: str = None):
     global internal_password
@@ -686,11 +692,11 @@ async def ShutdownCommand(interaction: discord.Interaction, password: str = None
     save_settings()
     print("Saved settings")
     print("byeeee")
-    await client.close()
+    await bot.close()
     return
 
 
-@tree.command(name="remove-embed", description="Remove embeddings from the database. Requires the password.")
+@bot.tree.command(name="remove-embed", description="Remove embeddings from the database. Requires the password.")
 @app_commands.describe(ids="comma separated list of ids")
 @app_commands.describe(password="get this from the console")
 async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, password: str = None):
@@ -718,7 +724,7 @@ async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, 
     return
 
 
-@tree.command(name="temperature", description="Set the temperature of ChatGPT's reponses.")
+@bot.tree.command(name="temperature", description="Set the temperature of ChatGPT's reponses.")
 @app_commands.describe(temperature="new temperature (0.0 - 2.0)")
 async def TemperatureCommand(interaction: discord.Interaction, temperature: float = None):
     await interaction.response.defer(thinking=True)  # think hard
@@ -739,4 +745,4 @@ async def TemperatureCommand(interaction: discord.Interaction, temperature: floa
     return
 
 
-client.run(TOKEN)
+bot.run(TOKEN)

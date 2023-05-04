@@ -55,7 +55,7 @@ csvlogger = CsvLogger(filename=filename,
 
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
 IMG_EXT = ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "tif", "jfif", "exif"]
-URL_REGEX = r"(?:\s|^)(https?:\/\/[^\s]+)"
+URL_REGEX = r"(?:https?:\/\/|www\.)\S+"
 
 chat_channel_ids = []
 server_options = {}
@@ -278,11 +278,11 @@ async def textwithmem_stream(
             done = True
 
         # print(f"avg delay: {round(statistics.mean(delays), 2)}", chunk_time, last_send, f"difference: {chunk_time - last_send}", end="\r")
-
         if chunk_time - last_send >= 1:
+            nourl = re.sub(URL_REGEX, "<URL hidden until complete>", chunkres)
             last_send = chunk_time
-            await editguy.edit(content=chunkres + "...")
-        # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" + 
+            await editguy.edit(content=nourl + "...")
+        # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" +
         if done:
             break
 

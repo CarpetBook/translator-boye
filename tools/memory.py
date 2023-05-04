@@ -3,7 +3,7 @@ from tools import vectors
 
 
 class ChatMemory:
-    def __init__(self, min_message_limit=5, max_message_limit=30):
+    def __init__(self, min_message_limit=5, max_message_limit=20):
         self.memory = []
         self.system = None
         self.starter = None

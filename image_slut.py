@@ -28,6 +28,8 @@ import statistics
 import random
 import string
 
+from typing import Union
+
 from csv_logger import CsvLogger
 import logging
 
@@ -62,6 +64,8 @@ server_options = {}
 
 internal_password = None
 temp = 0.75  # chatgpt temperature
+
+stopAll = False  # flag to stop all generation processes
 
 # define the length of your random string
 length = 10
@@ -212,10 +216,12 @@ async def textwithmem(
 
 # @tenacity.retry(stop=tenacity.stop_after_attempt(3))
 async def textwithmem_stream(
-    msg: discord.Message, genprompt: str, prepend: str = None
+    msg: Union[discord.Message, discord.Interaction], genprompt: str, prepend: str = None
 ):
     global temp
     verifyChatChannel(msg.channel.id)
+
+    isInteraction = isinstance(msg, discord.Interaction)
 
     id = msg.channel.id
     max = 1024
@@ -223,16 +229,17 @@ async def textwithmem_stream(
     presence_pen = 0.75
     # temp = 0.75
 
-    attachments = msg.attachments
-    txtread = ""
-    if len(attachments) > 0:
-        for attachment in attachments:
-            exts = attachment.filename.split(".")
+    if not isInteraction:
+        attachments = msg.attachments
+        txtread = ""
+        if len(attachments) > 0:
+            for attachment in attachments:
+                exts = attachment.filename.split(".")
 
-            if exts[-1] in TEXT_EXT:
-                txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+                if exts[-1] in TEXT_EXT:
+                    txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
-    genprompt = genprompt + "\n" + txtread  # add text from attachments to message
+        genprompt = genprompt + "\n" + txtread  # add text from attachments to message
 
     if genprompt[len(genprompt) - 1] == " ":
         genprompt = genprompt[:-1]  # remove trailing space for token optimization
@@ -258,7 +265,11 @@ async def textwithmem_stream(
     chunks = []
     chunkres = ""
     done = False
-    editguy = await msg.reply("...")
+    if isInteraction:
+        editguy = await msg.followup.send(content="...")
+    else:
+        editguy = await msg.reply("...")
+
     for chunk in resgen:
         chunk_time = time.time() - start_time
         chunkdelay = chunk_time - last_chunk
@@ -285,6 +296,9 @@ async def textwithmem_stream(
         # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" +
         if done:
             break
+        elif stopAll:
+            chunkres += "- (stopped)"
+            break
 
         last_chunk = chunk_time
 
@@ -295,6 +309,8 @@ async def textwithmem_stream(
 
 
     chat_memories[id].add("assistant", chunkres)
+
+    chat_memories[id].setLastMessage(editguy)
 
     chat_memories[id].clean()
 
@@ -330,6 +346,7 @@ async def text_commands(message: discord.Message):
     global token_thresh
     global ai_pre_msg
     global ai_name
+    global stopAll
 
     idh = message.channel.id
 
@@ -339,6 +356,7 @@ async def text_commands(message: discord.Message):
         print(orig)
 
         if message.channel.type == discord.ChannelType.private:
+            stopAll = False
             ops = server_options.get(str(message.channel.id), None)
             prepense = server_options[str(message.channel.id)]["start_with"]
             if ops is not None:
@@ -365,9 +383,10 @@ async def text_commands(message: discord.Message):
                 print("command: ", com)
                 print("fullprompt: ", fullprompt)
 
+                if com == "localsync":
+                    bot.tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+                    bot.tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
                 if com == "sync":
-                    # tree.copy_global_to(guild=discord.Object(id=848149296054272000))
-                    # tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
                     await bot.tree.sync(guild=discord.Object(id=848149296054272000))
                     await bot.tree.sync(guild=discord.Object(id=1072352297503440936))
                     await bot.tree.sync()
@@ -474,6 +493,7 @@ async def text_commands(message: discord.Message):
                     return
 
         elif idh in chat_channel_ids or idh is None:
+            stopAll = False
             # message.guild.id has to be string bc json won't accept int as key/property name
             ops = server_options.get(str(message.channel.id), None)
             prepense = server_options[str(message.channel.id)]["start_with"]
@@ -744,5 +764,79 @@ async def TemperatureCommand(interaction: discord.Interaction, temperature: floa
     await interaction.followup.send(content=f"Temperature set to {newtemp}.")
     return
 
+
+@bot.tree.command(name="undo", description="Undo and delete the last response.")
+async def UndoCommand(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
+    channelid = interaction.channel_id
+    if channelid not in chat_channel_ids:
+        await interaction.followup.send(content="Current channel is not a chat channel.")
+        return
+    if len(chat_memories[channelid].memory) == 0:
+        await interaction.followup.send(content="Nothing to undo.")
+        return
+    if chat_memories[channelid].memory[-1]["role"] == "user":
+        chat_memories[channelid].memory.pop()
+    elif chat_memories[channelid].memory[-1]["role"] == "assistant":
+        print("undone: ", chat_memories[channelid].memory.pop())
+        print("undone: ", chat_memories[channelid].memory.pop())
+        print("new memory: ", chat_memories[channelid].memory)
+    await chat_memories[channelid].last_message.delete()
+    await interaction.followup.send(content="Last response deleted.")
+    return
+
+
+@bot.tree.command(name="retry", description="Regenerate the last response. If temperature is zero, this will have no effect.")
+async def RetryCommand(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
+    channelid = interaction.channel_id
+    if channelid not in chat_channel_ids:
+        await interaction.followup.send(content="Current channel is not a chat channel.")
+        return
+    if len(chat_memories[channelid].memory) == 0:
+        await interaction.followup.send(content="Nothing to retry.")
+        return
+    if chat_memories[channelid].memory[-1]["role"] == "user":
+        await interaction.followup.send(content="Nothing to retry.")
+        return
+    print("retrying ", chat_memories[channelid].memory.pop())
+    await chat_memories[channelid].last_message.delete()
+    await textwithmem_stream(interaction, chat_memories[channelid].memory[-1]["content"])
+    return
+
+
+@bot.tree.command(name="edit", description="Edit ChatGPT's last response.")
+@app_commands.describe(message="new message")
+async def EditCommand(interaction: discord.Interaction, message: str):
+    await interaction.response.defer(thinking=True)
+    channelid = interaction.channel_id
+    if channelid not in chat_channel_ids:
+        await interaction.followup.send(content="Current channel is not a chat channel.")
+        return
+    if len(chat_memories[channelid].memory) == 0:
+        await interaction.followup.send(content="Nothing to edit.")
+        return
+    if chat_memories[channelid].memory[-1]["role"] == "user":
+        await interaction.followup.send(content="ChatGPT has not responded yet.")
+        return
+    chat_memories[channelid].memory[-1]["content"] = message
+    if len(message) > 1900:
+        message = message[:1900] + "..."
+    await chat_memories[channelid].last_message.edit(content=message)
+    await interaction.followup.send(content="Message edited.")
+    return
+
+
+@bot.tree.command(name="stop", description="Stop ChatGPT's response.")
+async def StopCommand(interaction: discord.Interaction):
+    global stopAll
+    await interaction.response.defer(thinking=True)
+    channelid = interaction.channel_id
+    if channelid not in chat_channel_ids:
+        await interaction.followup.send(content="Current channel is not a chat channel.")
+        return
+    stopAll = True
+    await interaction.followup.send(content="If ChatGPT was responding, all streams have been stopped.")
+    return
 
 bot.run(TOKEN)

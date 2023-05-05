@@ -7,12 +7,16 @@ Thought to be just a translator, but now it's a testing ground for whatever god 
 so now, it can do:
 
 - chatgpt
-- transcription
+- transcription/translation
 - resnet image recognition
 - tesseract ocr
 
 **UPDATE since I last updated this readme:**  
 he now has long term "memory" using embeddings and pinecone!! not only does this augment his consistency and memory, but it also allows me to lower the memory size considerably, which lowers the average token usage to a very sane average. (which saves me MONEY)
+
+**UPDATE UPDATE since I last updated this readme:**  
+long term memory is disabled while I figure out how to make it more natural  
+(but vectors are still being gathered and stored in pinecone)
 
 ## Commands
 
@@ -43,6 +47,30 @@ sets the prefix that you have to use to send a message to chatgpt. defaults to n
 ### /startwith \<string>
 
 prepends a string to chatgpt's messages before it replies. this was a sketchy test thing that never ended up being used, bc it was meant to chat with other bots (by using their prefix on its messages).
+
+### /shutdown \<password>
+
+shuts down the bot. requires the randomly generated password. using the slash command with no password will print the current password in the console.
+
+### /temperature \<number>
+
+set the temperature of chatgpt's responses. higher temperature leads to more random, less stable responses. default is 0.75. temperature of 0 will always return the same response for a given chat history.
+
+### **[NEW]** /undo
+
+undoes the last message sent by chatgpt. removes both the last chatgpt message and the last user message from the chat memory.
+
+### **[NEW]** /retry
+
+regenerates the last response from chatgpt. if temperature is zero, this will have no effect, because the response will be exactly the same every time.
+
+### **[NEW]** /edit \<new message>
+
+change the last response from chatgpt.
+
+### **[NEW]** /stop
+
+if chatgpt is streaming a response, it will stop as soon as possible.
 
 ### !translate [link]
 

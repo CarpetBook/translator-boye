@@ -3,13 +3,14 @@ from tools import vectors
 
 
 class ChatMemory:
-    def __init__(self, min_message_limit=5, max_message_limit=10):
+    def __init__(self, min_message_limit=5, max_message_limit=20):
         self.memory = []
         self.system = None
         self.starter = None
         self.min_message_limit = min_message_limit
         self.max_message_limit = max_message_limit
         self.role = "assistant"
+        self.last_message = None
 
     def add(self, role, *message):
         for i in message:
@@ -95,4 +96,8 @@ class ChatMemory:
 
     def setstarter(self, newstarter):
         self.starter = newstarter
+        return self
+
+    def setLastMessage(self, message):
+        self.last_message = message
         return self

@@ -1204,4 +1204,19 @@ async def StopCommand(interaction: discord.Interaction):
     )
     return
 
+
+# @bot.tree.command(name="settings", description="Change bot settings.")
+# async def bot_settings(
+#     interaction: discord.Interaction,
+#     chatgpt_enabled: bool = None,
+#     whisper_enabled: bool = None,
+#     resnet_enabled: bool = None,
+#     ocr_enabled: bool = None,
+#     pinecone_enabled: bool = None,
+#     chatgpt_files_allowed: bool = None,
+#     ):
+#     await interaction.response.defer(thinking=True)
+#     verify_settings_exist()
+
+
 bot.run(TOKEN)

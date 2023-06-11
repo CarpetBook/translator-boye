@@ -305,10 +305,10 @@ async def textwithmem_stream(
     # if len(generation) <= 1:
     #     return
 
-
     chat_memories[id].add("assistant", chunkres)
 
-    chat_memories[id].setLastMessage(editguy)
+    chat_memories[id].set_last_prompt(msg)
+    chat_memories[id].set_last_response(editguy)
 
     chat_memories[id].clean()
 

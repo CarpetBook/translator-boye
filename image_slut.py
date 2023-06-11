@@ -45,6 +45,7 @@ with open("settings.json", "r") as f:
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
 IMG_EXT = ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "tif", "jfif", "exif"]
 URL_REGEX = r"(?:https?:\/\/|www\.)\S+"
+ONE_DAY_SECONDS = 24*60*60
 
 chat_channel_ids = []
 server_options = {}

@@ -174,7 +174,6 @@ async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None)
     # if len(generation) <= 1:
     #     return
 
-
     chat_memories[id].add("assistant", generation)
 
     chat_memories[id].clean()

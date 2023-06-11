@@ -1,0 +1,8 @@
+{
+    "chatgpt_enabled": true,
+    "whisper_enabled": true,
+    "resnet_enabled": true,
+    "ocr_enabled": true,
+    "pinecone_enabled": true,
+    "chatgpt_files_allowed": true
+}

@@ -4,9 +4,18 @@
         1072354381271404675,
         1093414282085007411,
         1052918672009744414,
-        1099553616618061874
+        1099553616618061874,
+        1098769854703603762,
+        1116749097152548998
     ],
     "server_options": {
+        "chatgpt_enabled": true,
+        "whisper_enabled": true,
+        "whisper_disabled_reason": "Whisper is disabled to conserve VRAM on the host PC.",
+        "resnet_enabled": true,
+        "ocr_enabled": true,
+        "pinecone_enabled": false,
+        "chatgpt_files_allowed": true,
         "848149296054272000": {
             "name": "ufsih",
             "allow_images": true,
@@ -36,7 +45,15 @@
         "1052918672009744414": {
             "can_chat": true,
             "start_with": "",
-            "chat_prefix": null,
+            "chat_prefix": "-",
+            "allow_images": true,
+            "system": null,
+            "starter": null
+        },
+        "1116749097152548998": {
+            "can_chat": true,
+            "start_with": "",
+            "chat_prefix": "-",
             "allow_images": true,
             "system": null,
             "starter": null

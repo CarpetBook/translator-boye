@@ -10,6 +10,10 @@
 			"**/*.rpa": true,
 			"**/*.rpymc": true,
 			"**/cache/": true
-		}
+		},
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter"
+		},
+		"python.formatting.provider": "none"
 	}
 }

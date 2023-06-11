@@ -48,6 +48,9 @@ def downloadYoutubeAudio(link):
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        # info = ydl.extract_info(link, download=False)
+        # if info.get('is_live', True):
+        #     return ("fail", "I can't download live streams.")
         ydl.download(link)
 
     # print(info)

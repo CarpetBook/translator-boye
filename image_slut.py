@@ -152,7 +152,7 @@ async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None)
 
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message
 
-    if genprompt[len(genprompt) - 1] == " ":
+    if genprompt[-1] == " ":
         genprompt = genprompt[:-1]  # remove trailing space for token optimization
 
     chat_memories[id].add("user", genprompt)

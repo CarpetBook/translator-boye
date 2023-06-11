@@ -59,10 +59,11 @@ stopAll = False  # flag to stop all generation processes
 length = 10
 
 # create a list of all possible characters for your string
-characters = string.ascii_letters + string.digits + '!@#$%^&*()'
+characters = string.ascii_letters + string.digits + "!@#$%^&*()"
 
-# use the random.sample() function to generate a list of 'length' number of random characters from the 'characters' list
-internal_password = ''.join(random.sample(characters, length))
+# use the random.sample() function
+# generate a list of 'length' number of random characters from the 'characters' list
+internal_password = "".join(random.sample(characters, length))
 
 print(f"Password: {internal_password}")
 

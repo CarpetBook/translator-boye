@@ -282,6 +282,13 @@ async def textwithmem_stream(
         # print(f"avg delay: {round(statistics.mean(delays), 2)}", chunk_time, last_send, f"difference: {chunk_time - last_send}", end="\r")
         if chunk_time - last_send >= 1:
             nourl = re.sub(URL_REGEX, "<URL hidden until complete>", chunkres)
+            unmatched = is_unmatched_backticks(nourl)
+            nourl += "..."
+            if any(unmatched):
+                if unmatched[0]:
+                    nourl += "`"
+                if unmatched[1]:
+                    nourl += "```"
             last_send = chunk_time
             await editguy.edit(content=nourl + "...")
         # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" +

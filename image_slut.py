@@ -1,10 +1,24 @@
+"""
+image_slut.py
+"""
+import json
+import asyncio
+import re
+import time
+# import statistics
+import random
+import string
+from typing import Union, Generator
+from csv_logger import CsvLogger
+import logging
+
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 import openai
-import json
 import tenacity
 import tiktoken
+
 # generators
 from generators import text
 from generators import audio

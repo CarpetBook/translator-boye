@@ -33,11 +33,13 @@ from tools import resnet
 from tools import moderation
 from tools import filemanager
 
-import asyncio
-import re
+use_pinecone = False
 
-import time
-import statistics
+with open("settings.json", "r") as f:
+    settings = json.load(f)
+    if settings["server_options"]["pinecone_enabled"]:
+        use_pinecone = True
+        from tools import vectors
 
 
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]

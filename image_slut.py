@@ -204,7 +204,7 @@ async def textwithmem_stream(
     prepend: str = None,
 ):
     global temp
-    verifyChatChannel(msg.channel.id)
+    verify_chat_channel(msg.channel.id)
 
     isInteraction = isinstance(msg, discord.Interaction)
 

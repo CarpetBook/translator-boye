@@ -347,152 +347,397 @@ async def delete_old_files():
     filemanager.delete_old_files("imageslut_pics", ONE_DAY_SECONDS)
     filemanager.delete_old_files("audios", ONE_DAY_SECONDS)
     filemanager.delete_old_files("transcripts", ONE_DAY_SECONDS)
+
+# @bot.listen("on_message")
+# async def text_commands(message: discord.Message):
+#     global token_thresh
+#     global ai_pre_msg
+#     global ai_name
+#     global stopAll
+
+#     idh = message.channel.id
+
+#     if message.author.id != bot.user.id:
+#         print("user: ", message.author.name)
+#         orig = message.content
+#         print(orig)
+
+#         if message.channel.type == discord.ChannelType.private:
+#             stopAll = False
+#             ops = server_options.get(str(message.channel.id), None)
+#             prepense = server_options[str(message.channel.id)]["start_with"]
+#             if ops is not None:
+#                 prefix = ops["chat_prefix"]
+#             if not ops["can_chat"]:
+#                 return
+#             if prefix is None or message.content.startswith(prefix):
+#                 if prefix is not None:
+#                     orig = orig[len(prefix) :]
+#                 async with message.channel.typing():
+#                     await textwithmem_stream(message, orig)
+
+#         elif orig.startswith("!"):
+#             orig = orig[1:]  # no !
+#             argies = orig.split(
+#                 " "
+#             )  # split by whitespace (not doing this yet actually)
+#             com = argies.pop(0)  # command is first in split array
+#             fullprompt = " ".join(argies)
+#             ops = server_options.get(message.guild.id, None)
+
+#             async with message.channel.typing():
+#                 print("command: ", com)
+#                 print("fullprompt: ", fullprompt)
+
+#                 if com == "localsync":
+#                     bot.tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+#                     bot.tree.copy_global_to(
+#                         guild=discord.Object(id=1072352297503440936)
+#                     )
+#                 if com == "sync":
+#                     await bot.tree.sync(guild=discord.Object(id=848149296054272000))
+#                     await bot.tree.sync(guild=discord.Object(id=1072352297503440936))
+#                     await bot.tree.sync()
+#                     return
+
+#                 if com == "transcribe" or com == "translate" or com == "summarize":
+#                     if not server_options["whisper_enabled"]:
+#                         await message.channel.send(content=server_options["whisper_disabled_reason"])
+#                         return
+#                     valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
+#                     attachments = message.attachments
+
+#                     dl_res = None
+#                     if (
+#                         len(attachments) > 0
+#                         and len(fullprompt) > 0
+#                         or len(attachments) > 1
+#                     ):
+#                         await message.channel.send(
+#                             "Please send only one attachment or link."
+#                         )
+#                         return
+#                     if len(attachments) > 0:
+#                         exts = attachments[0].filename.split(".")
+#                         if not exts[-1] in valids:
+#                             return
+#                         dl_res = audio.downloadAudio(
+#                             attachments[0].url, attachments[0].filename
+#                         )
+#                     elif len(fullprompt) > 0:
+#                         validlink = re.search(URL_REGEX, fullprompt)
+#                         if validlink is None:
+#                             await message.channel.send("invalid link")
+#                             return
+#                         dl_res = audio.downloadYoutubeAudio(fullprompt)
+
+#                     if dl_res[0] == "fail":
+#                         await message.channel.send(f"something went wrong {dl_res[1]}")
+#                         return
+#                     # await message.channel.send(f"saved as {dl_res}")
+#                     if com == "transcribe":
+#                         asyncio.get_event_loop().create_task(
+#                             trans.transcriber(message, dl_res[1])
+#                         )
+#                     elif com == "translate":
+#                         asyncio.get_event_loop().create_task(
+#                             trans.transcriber(message, dl_res[1], task="translate")
+#                         )
+#                     elif com == "summarize":
+#                         res = await trans.transcriber(
+#                             message,
+#                             dl_res[1],
+#                             model_override="small",
+#                             return_result=True,
+#                         )
+#                         sum_msg = await message.channel.send("Summarizing...")
+#                         sum_res = await summarizer.summarizeLongText(res)
+#                         if sum_res[0] == "fail":
+#                             await sum_msg.delete()
+#                             await message.channel.send(
+#                                 f"something went wrong {sum_res[1]}"
+#                             )
+#                             return
+#                         await sum_msg.delete()
+#                         await message.reply(sum_res[1])
+#                     return
+
+#                 if com == "testytlink":
+#                     if not server_options["whisper_enabled"]:
+#                         await message.channel.send(content=server_options["whisper_disabled_reason"])
+#                         return
+#                     validlink = re.search(URL_REGEX, fullprompt)
+#                     if validlink is None:
+#                         await message.channel.send("invalid link")
+#                         return
+#                     file = audio.downloadYoutubeAudio(fullprompt)
+#                     asyncio.get_event_loop().create_task(
+#                         trans.transcriber(message, file)
+#                     )
+#                     return
+
+#                 if com == "ocr":
+#                     valids = IMG_EXT
+#                     attachments = message.attachments
+
+#                     dl_res = None
+#                     if len(attachments) > 0:
+#                         exts = attachments[0].filename.split(".")
+#                         if not exts[-1] in valids:
+#                             return
+#                         dl_res = await images.downloadpic(attachments[0].url)
+#                     # await message.channel.send(f"saved as {dl_res}")
+#                     ocr_res = ocr.run_ocr(dl_res)
+#                     if ocr_res[0] == "fail":
+#                         await message.channel.send(f"something went wrong {ocr_res[1]}")
+#                         return
+#                     elif ocr_res[0] == "text":
+#                         await message.channel.send(ocr_res[1])
+#                     elif ocr_res[0] == "file":
+#                         await message.channel.send(
+#                             content=ocr_res[1], file=discord.File(ocr_res[2])
+#                         )
+#                     return
+
+#                 if com == "resnet":
+#                     valids = IMG_EXT
+#                     attachments = message.attachments
+
+#                     dl_res = None
+#                     if len(attachments) > 0:
+#                         exts = attachments[0].filename.split(".")
+#                         if not exts[-1] in valids:
+#                             return
+#                         dl_res = await images.downloadpic(attachments[0].url)
+#                     # await message.channel.send(f"saved as {dl_res}")
+#                     res = resnet.run_resnet(dl_res)
+#                     restext = ""
+#                     for i in res:
+#                         restext += f"{i[0]}: {round(i[1], 2)}% confidence\n"
+#                     await message.channel.send(restext)
+#                     return
+
+#                 if com == "moderation":
+#                     res = moderation.classify(fullprompt)
+#                     if res[0] == "fail":
+#                         await message.channel.send(f"something went wrong {res[1]}")
+#                         return
+#                     await message.reply(res[1])
+#                     return
+
+#                 if com == "teststream":
+#                     await textwithmem_stream(message, genprompt=fullprompt)
+#                     return
+
+#         elif idh in chat_channel_ids or idh is None:
+#             stopAll = False
+#             # message.guild.id has to be string bc json won't accept int as key/property name
+#             ops = server_options.get(str(message.channel.id), None)
+#             prepense = server_options[str(message.channel.id)]["start_with"]
+#             if ops is not None:
+#                 prefix = ops["chat_prefix"]
+#             if not ops["can_chat"]:
+#                 return
+#             if prefix is None or message.content.startswith(prefix):
+#                 async with message.channel.typing():
+#                     if prefix is not None:
+#                         orig = orig[len(prefix):]  # remove prefix
+#                     await textwithmem_stream(message, genprompt=orig, prepend=prepense)
+
+# @bot.listen("on_message_edit")
+# async def regenerate_edited_message(before, after):
+#     global stopAll
+#     if after.author.id == bot.user.id:
+#         return
+#     editedid = after.channel.id
+#     editedchannel = chat_memories.get(str(editedid), None)
+#     if editedchannel is not None:
+#         if editedchannel["last_prompt"] != before:
+#             return
+#         stopAll = True
+
+#         if editedchannel.memory[-1]["role"] == "user":
+            
+#             return
+#         print("retrying ", chat_memories[channelid].memory.pop())
+        
+
+
+
 @bot.listen("on_message")
 async def text_commands(message: discord.Message):
-    global token_thresh
-    global ai_pre_msg
-    global ai_name
     global stopAll
-
     idh = message.channel.id
 
-    if message.author.id != bot.user.id:
-        print("user: ", message.author.name)
-        orig = message.content
-        print(orig)
+    if message.author.id == bot.user.id:
+        return
 
-        if message.channel.type == discord.ChannelType.private:
-            stopAll = False
-            ops = server_options.get(str(message.channel.id), None)
-            prepense = server_options[str(message.channel.id)]["start_with"]
-            if ops is not None:
-                prefix = ops["chat_prefix"]
-            if not ops["can_chat"]:
-                return
-            if prefix is None or message.content.startswith(prefix):
-                if prefix is not None:
-                    orig = orig[len(prefix):]
-                async with message.channel.typing():
-                    await textwithmem_stream(message, orig)
+    print("user: ", message.author.name)
+    orig = message.content
+    print(orig)
+    stopAll = False
+    if message.channel.type == discord.ChannelType.private:
+        await handle_private_message(message)
+    elif orig.startswith("!"):
+        await handle_command_message(message, orig)
+    elif idh in chat_channel_ids or idh is None:
+        await handle_chat_message(message, orig)
 
-        elif orig.startswith("!"):
-            orig = orig[1:]  # no !
-            argies = orig.split(
-                " "
-            )  # split by whitespace (not doing this yet actually)
-            com = argies.pop(0)  # command is first in split array
-            fullprompt = " ".join(argies)
-            ops = server_options.get(message.guild.id, None)
+
+async def handle_private_message(message: discord.Message):
+    global stopAll
+    ops = server_options.get(str(message.channel.id), None)
+    orig = message.content
+    if ops is not None and ops["can_chat"]:
+        prefix = ops["chat_prefix"]
+        if prefix is not None and message.content.startswith(prefix):
+            orig = orig[len(prefix):]  # remove prefix
+        async with message.channel.typing():
+            await textwithmem_stream(message, orig)
+
+
+async def handle_command_message(message: discord.Message, orig: str):
+    global stopAll
+    com, *argies = orig[1:].split()
+    fullprompt = " ".join(argies)
 
             async with message.channel.typing():
+            async with message.channel.typing():
 
-                print("command: ", com)
-                print("fullprompt: ", fullprompt)
+    async with message.channel.typing():
 
-                if com == "localsync":
-                    bot.tree.copy_global_to(guild=discord.Object(id=848149296054272000))
-                    bot.tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
-                if com == "sync":
-                    await bot.tree.sync(guild=discord.Object(id=848149296054272000))
-                    await bot.tree.sync(guild=discord.Object(id=1072352297503440936))
-                    await bot.tree.sync()
-                    return
+        print("command: ", com)
+        print("fullprompt: ", fullprompt)
 
-                if com == "transcribe" or com == "translate" or com == "summarize":
-                    valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
-                    attachments = message.attachments
+        if com == "localsync":
+            bot.tree.copy_global_to(guild=discord.Object(id=848149296054272000))
+            bot.tree.copy_global_to(guild=discord.Object(id=1072352297503440936))
+        elif com == "sync":
+            await bot.tree.sync(guild=discord.Object(id=848149296054272000))
+            await bot.tree.sync(guild=discord.Object(id=1072352297503440936))
+            await bot.tree.sync()
+            return
+        elif com in ["transcribe", "translate", "summarize"]:
+            await handle_transcription_command(message, com, fullprompt)
+        elif com == "ocr":
+            await handle_ocr_command(message)
+        elif com == "resnet":
+            await handle_resnet_command(message)
+        elif com == "moderation":
+            await handle_moderation_command(message, fullprompt)
+        elif com == "teststream":
+            await textwithmem_stream(message, genprompt=fullprompt)
 
-                    dl_res = None
-                    if len(attachments) > 0 and len(fullprompt) > 0 or len(attachments) > 1:
-                        await message.channel.send("Please send only one attachment or link.")
-                        return
-                    if len(attachments) > 0:
-                        exts = attachments[0].filename.split(".")
-                        if not exts[-1] in valids:
-                            return
-                        dl_res = audio.downloadAudio(attachments[0].url, attachments[0].filename)
-                    elif len(fullprompt) > 0:
-                        validlink = re.search(URL_REGEX, fullprompt)
-                        if validlink is None:
-                            await message.channel.send("invalid link")
-                            return
-                        dl_res = audio.downloadYoutubeAudio(fullprompt)
 
-                    if dl_res[0] == "fail":
-                        await message.channel.send(f"something went wrong {dl_res[1]}")
-                        return
-                    # await message.channel.send(f"saved as {dl_res}")
-                    if com == "transcribe":
-                        asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1]))
-                    elif com == "translate":
-                        asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1], task="translate"))
-                    elif com == "summarize":
-                        res = await trans.transcriber(message, dl_res[1], model_override="small", return_result=True)
-                        sum_msg = await message.channel.send("Summarizing...")
-                        sum_res = await summarizer.summarizeLongText(res)
-                        if (sum_res[0] == "fail"):
-                            await sum_msg.delete()
-                            await message.channel.send(f"something went wrong {sum_res[1]}")
-                            return
-                        await sum_msg.delete()
-                        await message.reply(sum_res[1])
-                    return
+async def handle_chat_message(message: discord.Message, orig: str):
+    global stopAll
+    ops = server_options.get(str(message.channel.id), None)
+    prepense = server_options[str(message.channel.id)]["start_with"]
+    if ops is not None and ops["can_chat"]:
+        prefix = ops["chat_prefix"]
+        if prefix is None or message.content.startswith(prefix):
+            async with message.channel.typing():
+                await textwithmem_stream(message, genprompt=orig, prepend=prepense)
 
-                if com == "testytlink":
-                    validlink = re.search(URL_REGEX, fullprompt)
-                    if validlink is None:
-                        await message.channel.send("invalid link")
-                        return
-                    file = audio.downloadYoutubeAudio(fullprompt)
-                    asyncio.get_event_loop().create_task(trans.transcriber(message, file))
-                    return
 
-                if com == "ocr":
-                    valids = IMG_EXT
-                    attachments = message.attachments
+async def handle_transcription_command(message: discord.Message, com: str, fullprompt: str):
+    if not server_options["whisper_enabled"]:
+        await message.channel.send(content=server_options["whisper_disabled_reason"])
+        return
+    _valids = ["wav", "mp3", "ogg", "flac", "m4a", "mp4", "webm", "mov"]
+    attachments = message.attachments
 
-                    dl_res = None
-                    if len(attachments) > 0:
-                        exts = attachments[0].filename.split(".")
-                        if not exts[-1] in valids:
-                            return
-                        dl_res = await images.downloadpic(attachments[0].url)
-                    # await message.channel.send(f"saved as {dl_res}")
-                    ocr_res = ocr.run_ocr(dl_res)
-                    if ocr_res[0] == "fail":
-                        await message.channel.send(f"something went wrong {ocr_res[1]}")
-                        return
-                    elif ocr_res[0] == "text":
-                        await message.channel.send(ocr_res[1])
-                    elif ocr_res[0] == "file":
-                        await message.channel.send(content=ocr_res[1], file=discord.File(ocr_res[2]))
-                    return
+    dl_res = None
+    if len(attachments) > 1 or (len(attachments) == 1 and len(fullprompt) > 0):
+        await message.channel.send("Please send only one attachment or link.")
+        return
+    if len(attachments) == 1:
+        exts = attachments[0].filename.split(".")
+        if exts[-1] in _valids:
+            dl_res = audio.downloadAudio(attachments[0].url, attachments[0].filename)
+    elif len(fullprompt) > 0:
+        validlink = re.search(URL_REGEX, fullprompt)
+        if validlink is not None:
+            dl_res = audio.downloadYoutubeAudio(fullprompt)
 
-                if com == "resnet":
-                    valids = IMG_EXT
-                    attachments = message.attachments
+    if dl_res is None:
+        return
+    if dl_res[0] == "fail":
+        await message.channel.send(f"something went wrong\n{dl_res[1]}")
+        return
 
-                    dl_res = None
-                    if len(attachments) > 0:
-                        exts = attachments[0].filename.split(".")
-                        if not exts[-1] in valids:
-                            return
-                        dl_res = await images.downloadpic(attachments[0].url)
-                    # await message.channel.send(f"saved as {dl_res}")
-                    res = resnet.run_resnet(dl_res)
-                    restext = ""
-                    for i in res:
-                        restext += f"{i[0]}: {round(i[1], 2)}% confidence\n"
-                    await message.channel.send(restext)
-                    return
+    if com == "transcribe":
+        asyncio.get_event_loop().create_task(trans.transcriber(message, dl_res[1]))
+    elif com == "translate":
+        asyncio.get_event_loop().create_task(
+            trans.transcriber(message, dl_res[1], task="translate")
+        )
+    elif com == "summarize":
+        res = await trans.transcriber(
+            message, dl_res[1], model_override="small", return_result=True
+        )
+        sum_msg = await message.channel.send("Summarizing...")
+        sum_res = await summarizer.summarizeLongText(res)
+        if sum_res[0] == "fail":
+            await sum_msg.delete()
+            await message.channel.send(f"something went wrong {sum_res[1]}")
+            return
+        await sum_msg.delete()
+        await message.reply(sum_res[1])
 
-                if com == "moderation":
-                    res = moderation.classify(fullprompt)
-                    if res[0] == "fail":
-                        await message.channel.send(f"something went wrong {res[1]}")
-                        return
-                    await message.reply(res[1])
-                    return
+
+async def handle_ocr_command(message: discord.Message):
+    valids = IMG_EXT
+    attachments = message.attachments
+
+    dl_res = None
+    if len(attachments) > 0:
+        exts = attachments[0].filename.split(".")
+        if exts[-1] in valids:
+            dl_res = await images.downloadpic(attachments[0].url)
+
+    if dl_res is None:
+        return
+
+    ocr_res = ocr.run_ocr(dl_res)
+    if ocr_res[0] == "fail":
+        await message.channel.send(f"something went wrong {ocr_res[1]}")
+        return
+    elif ocr_res[0] == "text":
+        await message.channel.send(ocr_res[1])
+    elif ocr_res[0] == "file":
+        await message.channel.send(
+            content=ocr_res[1], file=discord.File(ocr_res[2])
+        )
+
+
+async def handle_resnet_command(message: discord.Message):
+    valids = IMG_EXT
+    attachments = message.attachments
+
+    dl_res = None
+    if len(attachments) > 0:
+        exts = attachments[0].filename.split(".")
+        if exts[-1] in valids:
+            dl_res = await images.downloadpic(attachments[0].url)
+
+    if dl_res is None:
+        return
+
+    res = resnet.run_resnet(dl_res)
+    restext = ""
+    for i in res:
+        restext += f"{i[0]}: {round(i[1], 2)}% confidence\n"
+    await message.channel.send(restext)
+
+
+async def handle_moderation_command(message: discord.Message, fullprompt: str):
+    res = moderation.classify(fullprompt)
+    if res[0] == "fail":
+        await message.channel.send(f"something went wrong {res[1]}")
+        return
+    await message.reply(res[1])
+
 
                 if com == "teststream":
                     await textwithmem_stream(message, genprompt=fullprompt)

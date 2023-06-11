@@ -33,7 +33,7 @@ async def transcriber(respond: discord.Message, file, task="transcribe", model_o
     filename = file.split("\\")[-1].split(".")[0]
 
     # write transcripts
-    writer(result, f"transcripts\\{filename}")
+    writer(result, f"transcripts\\{filename}", {"max_line_width": 1000})
 
     # zip transcripts
     with zipfile.ZipFile(f"transcripts\\{filename}.zip", "w") as zip:
@@ -55,8 +55,9 @@ async def transcriber(respond: discord.Message, file, task="transcribe", model_o
     # use the segments and split by \n
     newtext = ""
     for segment in result["segments"]:
-        stamp = maketimestamp(segment["start"], segment["end"])
-        newtext += stamp + " " + segment["text"] + "\n"
+        # stamp = maketimestamp(segment["start"], segment["end"])
+        # newtext += stamp + " " + segment["text"] + "\n"
+        newtext += segment["text"] + "\n"
 
     # get the language name from the language code, cheap way of detecting language
     source_lang = langcodes.Language(result["language"]).language_name()

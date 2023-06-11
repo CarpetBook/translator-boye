@@ -126,7 +126,7 @@ async def textwithmem(
     msg: discord.Message, genprompt: str, prepend: str = None
 ):
     global temp
-    verifyChatChannel(msg.channel.id)
+    verify_chat_channel(msg.channel.id)
 
     id = msg.channel.id
     max = 1024

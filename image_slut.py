@@ -163,11 +163,7 @@ async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None)
         messages.append({"role": "assistant", "content": similartext})
 
     res = await text.genchat(
-        messages=messages,
-        max=max,
-        temp=temp,
-        freq=freq_pen,
-        pres=presence_pen
+        messages=messages, max=max, temp=temp, freq=freq_pen, pres=presence_pen
     )
 
     generation = res[1]

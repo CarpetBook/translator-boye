@@ -17,7 +17,7 @@ from tools.memory import ChatMemory
 from tools import ocr
 from tools import resnet
 from tools import moderation
-from tools import vectors
+from tools import filemanager
 
 import asyncio
 import re
@@ -312,6 +312,13 @@ async def on_ready():
     print("Hi! I'm ready!")
 
 
+@tasks.loop(hours=24)
+async def delete_old_files():
+    print("deleting old files")
+    filemanager.delete_old_files("edit_pics", ONE_DAY_SECONDS)
+    filemanager.delete_old_files("imageslut_pics", ONE_DAY_SECONDS)
+    filemanager.delete_old_files("audios", ONE_DAY_SECONDS)
+    filemanager.delete_old_files("transcripts", ONE_DAY_SECONDS)
 @bot.listen("on_message")
 async def text_commands(message: discord.Message):
     global token_thresh

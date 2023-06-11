@@ -245,7 +245,8 @@ async def textwithmem_stream(
         temperature=temp,
         frequency_penalty=freq_pen,
         presence_penalty=presence_pen,
-        stream=True
+        stream=True,
+        request_timeout=15,
     )
 
     start_time = time.time()

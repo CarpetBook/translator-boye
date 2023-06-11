@@ -222,7 +222,12 @@ async def textwithmem_stream(
                 exts = attachment.filename.split(".")
 
                 if exts[-1] in TEXT_EXT:
-                    txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+                    txtread = (
+                        txtread
+                        + attachment.filename
+                        + "\n"
+                        + text.readTxtFile(attachment.url)
+                    )
 
         genprompt = genprompt + "\n" + txtread  # add text from attachments to message
 

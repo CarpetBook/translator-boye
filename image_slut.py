@@ -266,7 +266,7 @@ async def textwithmem_stream(
         chunkdelay = chunk_time - last_chunk
         delays.append(chunkdelay)
 
-        tokenpersecond = 1 / statistics.mean(delays)
+        # tokenpersecond = 1 / statistics.mean(delays)
 
         chunks.append(chunk)  # save the event response
 

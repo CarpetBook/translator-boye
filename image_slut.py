@@ -290,7 +290,7 @@ async def textwithmem_stream(
                 if unmatched[1]:
                     nourl += "```"
             last_send = chunk_time
-            await editguy.edit(content=nourl + "...")
+            await editguy.edit(content=nourl)
         # f"Average tokens/sec: {round(tokenpersecond, 2)}\n" +
         if done:
             break

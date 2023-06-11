@@ -847,48 +847,68 @@ async def ClearCommand(interaction: discord.Interaction):
         return
     if channelid in chat_channel_ids:
         chat_memories[channelid].clear()
-        await interaction.followup.send(content="i forgor :skull:\nChat memory has been cleared.")
+        await interaction.followup.send(
+            content="i forgor :skull:\nChat memory has been cleared."
+        )
     else:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
     return
 
 
 @bot.tree.command(name="setchat", description="Make this channel a chat channel.")
 async def SetChatCommand(interaction: discord.Interaction):
     if interaction.channel_id in chat_channel_ids:
-        await interaction.response.send_message(content="This channel is already a chat channel.")
+        await interaction.response.send_message(
+            content="This channel is already a chat channel."
+        )
         return
     chat_memories[interaction.channel_id] = ChatMemory()
     chat_channel_ids.append(interaction.channel_id)
     save_settings()
-    await interaction.response.send_message(content="This channel is now a chat channel.")
+    await interaction.response.send_message(
+        content="This channel is now a chat channel."
+    )
     return
 
 
 @bot.tree.command(name="unchat", description="Remove chat from this channel.")
 async def UnChatCommand(interaction: discord.Interaction):
     if interaction.channel_id not in chat_channel_ids:
-        await interaction.response.send_message(content="This channel is not a chat channel.")
+        await interaction.response.send_message(
+            content="This channel is not a chat channel."
+        )
         return
     chat_memories.pop(interaction.channel_id)
     chat_channel_ids.remove(interaction.channel_id)
     save_settings()
-    await interaction.response.send_message(content="This channel is no longer a chat channel.")
+    await interaction.response.send_message(
+        content="This channel is no longer a chat channel."
+    )
     return
 
 
-@bot.tree.command(name="system-prompt", description="Set the system prompt for ChatGPT.")
-async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = None, noclear: bool = False):
+@bot.tree.command(
+    name="system-prompt", description="Set the system prompt for ChatGPT."
+)
+async def SystemPromptCommand(
+    interaction: discord.Interaction, prompt: str = None, noclear: bool = False
+):
     await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
 
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
 
     if prompt is None:
         if chat_memories[channelid].system is not None:
-            await interaction.followup.send(content=f"```{chat_memories[channelid].system}```")
+            await interaction.followup.send(
+                content=f"```{chat_memories[channelid].system}```"
+            )
             return
         await interaction.followup.send(content="No system prompt set.")
         return
@@ -902,20 +922,32 @@ async def SystemPromptCommand(interaction: discord.Interaction, prompt: str = No
         prompt = prompt[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
-    await interaction.followup.send(content=f"System prompt changed.\n```{prompt}```\nMemory cleared.")
+    await interaction.followup.send(
+        content=f"System prompt changed.\n```{prompt}```\nMemory cleared."
+    )
     return
 
 
-@bot.tree.command(name="starter-message", description="Add a starting assistant message to give context.")
+@bot.tree.command(
+    name="starter-message",
+    description="Add a starting assistant message to give context.",
+)
 @app_commands.describe(starter="assistant's starting message")
 @app_commands.describe(delete="delete the starter message")
 @app_commands.describe(noclear="don't clear the chat memory")
-async def StarterMessageCommand(interaction: discord.Interaction, starter: str = None, delete: bool = False, noclear: bool = False):
+async def StarterMessageCommand(
+    interaction: discord.Interaction,
+    starter: str = None,
+    delete: bool = False,
+    noclear: bool = False,
+):
     await interaction.response.defer(thinking=True)  # think hard
     channelid = interaction.channel_id
 
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
 
     if delete:
@@ -925,7 +957,9 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
 
     if starter is None:
         if chat_memories[channelid].starter is not None:
-            await interaction.followup.send(content=f"```{chat_memories[channelid].starter}```")
+            await interaction.followup.send(
+                content=f"```{chat_memories[channelid].starter}```"
+            )
             return
         await interaction.followup.send(content="No starter message set.")
         return
@@ -935,7 +969,9 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
         starter = starter[:1900] + "{truncated}"
     if not noclear:
         chat_memories[channelid].clear()
-    await interaction.followup.send(content=f"Starter message changed.\n```{starter}```")
+    await interaction.followup.send(
+        content=f"Starter message changed.\n```{starter}```"
+    )
     return
 
 
@@ -944,7 +980,10 @@ async def StarterMessageCommand(interaction: discord.Interaction, starter: str =
 async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None):
     verifyServer(interaction.channel.id)
     if prefix is None:
-        await interaction.response.send_message(content="Current prefix: " + server_options[str(interaction.channel.id)]["chat_prefix"])
+        await interaction.response.send_message(
+            content="Current prefix: "
+            + server_options[str(interaction.channel.id)]["chat_prefix"]
+        )
         return
     if prefix.lower() in ["none", "null", "remove", "delete", "clear"]:
         server_options[str(interaction.channel.id)]["chat_prefix"] = None
@@ -957,10 +996,14 @@ async def SetPrefixCommand(interaction: discord.Interaction, prefix: str = None)
     return
 
 
-@bot.tree.command(name="startwith", description="Always prepend a response with a certain string.")
+@bot.tree.command(
+    name="startwith", description="Always prepend a response with a certain string."
+)
 @app_commands.describe(startwith="string to prepend")
 @app_commands.describe(remove="stops prepending a string")
-async def StartWithCommand(interaction: discord.Interaction, startwith: str = None, remove: bool = None):
+async def StartWithCommand(
+    interaction: discord.Interaction, startwith: str = None, remove: bool = None
+):
     if remove is not None and remove is True:
         server_options[str(interaction.guild.id)]["start_with"] = None
         save_settings()
@@ -970,11 +1013,16 @@ async def StartWithCommand(interaction: discord.Interaction, startwith: str = No
         if server_options[str(interaction.guild.id)]["start_with"] is None:
             await interaction.response.send_message(content="No prepended string.")
             return
-        await interaction.response.send_message(content="Current prepended string: " + server_options[str(interaction.guild.id)]["start_with"])
+        await interaction.response.send_message(
+            content="Current prepended string: "
+            + server_options[str(interaction.guild.id)]["start_with"]
+        )
         return
     server_options[str(interaction.guild.id)]["start_with"] = startwith
     save_settings()
-    await interaction.response.send_message(content=f"Starting string set to `{startwith}`.")
+    await interaction.response.send_message(
+        content=f"Starting string set to `{startwith}`."
+    )
     return
 
 
@@ -984,7 +1032,9 @@ async def ShutdownCommand(interaction: discord.Interaction, password: str = None
     global internal_password
     if password is None:
         print(f"Someone used /shutdown. Password: {internal_password}")
-        await interaction.response.send_message(content="Please provide the password. It was printed in the console.")
+        await interaction.response.send_message(
+            content="Please provide the password. It was printed in the console."
+        )
         return
     if password != internal_password:
         await interaction.response.send_message(content="Incorrect password.")
@@ -1001,20 +1051,29 @@ async def ShutdownCommand(interaction: discord.Interaction, password: str = None
     return
 
 
-@bot.tree.command(name="remove-embed", description="Remove embeddings from the database. Requires the password.")
+@bot.tree.command(
+    name="remove-embed",
+    description="Remove embeddings from the database. Requires the password.",
+)
 @app_commands.describe(ids="comma separated list of ids")
 @app_commands.describe(password="get this from the console")
-async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, password: str = None):
+async def RemoveEmbedCommand(
+    interaction: discord.Interaction, ids: str = None, password: str = None
+):
     await interaction.response.defer(thinking=True)  # think hard
     global internal_password
     if password is None:
-        await interaction.followup.send(content="Please provide the password. It was printed in the console.")
+        await interaction.followup.send(
+            content="Please provide the password. It was printed in the console."
+        )
         return
     if password != internal_password:
         await interaction.followup.send(content="Incorrect password.")
         return
     if ids is None:
-        await interaction.followup.send(content="Please provide the ids of the embeddings to remove.")
+        await interaction.followup.send(
+            content="Please provide the ids of the embeddings to remove."
+        )
         return
     ids = ids.split(",")
     try:
@@ -1029,9 +1088,13 @@ async def RemoveEmbedCommand(interaction: discord.Interaction, ids: str = None, 
     return
 
 
-@bot.tree.command(name="temperature", description="Set the temperature of ChatGPT's reponses.")
+@bot.tree.command(
+    name="temperature", description="Set the temperature of ChatGPT's reponses."
+)
 @app_commands.describe(temperature="new temperature (0.0 - 2.0)")
-async def TemperatureCommand(interaction: discord.Interaction, temperature: float = None):
+async def TemperatureCommand(
+    interaction: discord.Interaction, temperature: float = None
+):
     await interaction.response.defer(thinking=True)  # think hard
     global temp
     if temperature is None:
@@ -1043,7 +1106,9 @@ async def TemperatureCommand(interaction: discord.Interaction, temperature: floa
         if newtemp < 0.0 or newtemp > 2.0:
             raise ValueError
     except ValueError:
-        await interaction.followup.send(content="Temperature must be a number between 0.0 and 2.0.")
+        await interaction.followup.send(
+            content="Temperature must be a number between 0.0 and 2.0."
+        )
         return
     temp = newtemp
     await interaction.followup.send(content=f"Temperature set to {newtemp}.")
@@ -1055,7 +1120,9 @@ async def UndoCommand(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     channelid = interaction.channel_id
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
     if len(chat_memories[channelid].memory) == 0:
         await interaction.followup.send(content="Nothing to undo.")
@@ -1071,12 +1138,17 @@ async def UndoCommand(interaction: discord.Interaction):
     return
 
 
-@bot.tree.command(name="retry", description="Regenerate the last response. If temperature is zero, this will have no effect.")
+@bot.tree.command(
+    name="retry",
+    description="Regenerate the last response. If temperature is zero, this will have no effect.",
+)
 async def RetryCommand(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     channelid = interaction.channel_id
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
     if len(chat_memories[channelid].memory) == 0:
         await interaction.followup.send(content="Nothing to retry.")
@@ -1086,7 +1158,9 @@ async def RetryCommand(interaction: discord.Interaction):
         return
     print("retrying ", chat_memories[channelid].memory.pop())
     await chat_memories[channelid].last_message.delete()
-    await textwithmem_stream(interaction, chat_memories[channelid].memory[-1]["content"])
+    await textwithmem_stream(
+        interaction, chat_memories[channelid].memory[-1]["content"]
+    )
     return
 
 
@@ -1096,7 +1170,9 @@ async def EditCommand(interaction: discord.Interaction, message: str):
     await interaction.response.defer(thinking=True)
     channelid = interaction.channel_id
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
     if len(chat_memories[channelid].memory) == 0:
         await interaction.followup.send(content="Nothing to edit.")
@@ -1118,10 +1194,14 @@ async def StopCommand(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     channelid = interaction.channel_id
     if channelid not in chat_channel_ids:
-        await interaction.followup.send(content="Current channel is not a chat channel.")
+        await interaction.followup.send(
+            content="Current channel is not a chat channel."
+        )
         return
     stopAll = True
-    await interaction.followup.send(content="If ChatGPT was responding, all streams have been stopped.")
+    await interaction.followup.send(
+        content="If ChatGPT was responding, all streams have been stopped."
+    )
     return
 
 bot.run(TOKEN)

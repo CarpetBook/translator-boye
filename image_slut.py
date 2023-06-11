@@ -89,7 +89,9 @@ def save_settings():
 
 
 botintents = discord.Intents(messages=True, message_content=True)
-activity = discord.Activity(name="for your questions", type=discord.ActivityType.watching)
+activity = discord.Activity(
+    name="for your questions", type=discord.ActivityType.watching
+)
 
 bot = commands.Bot(command_prefix="!", intents=botintents, activity=activity)
 

@@ -145,7 +145,9 @@ async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None)
         similartext = "*thinking* I remember a few conversations like this.\n"
         for i in range(len(similars)):
             similartext += f"{similars[i][0]}\n\n...\n\n"
-        similartext += "*thinking* So I'll try to answer the user's question based on that.\n"
+        similartext += (
+            "*thinking* So I'll try to answer the user's question based on that.\n"
+        )
     print(similartext)
 
     genprompt = genprompt + "\n" + txtread  # add text from attachments to message

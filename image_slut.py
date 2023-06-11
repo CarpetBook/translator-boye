@@ -122,9 +122,7 @@ def verify_chat_channel(_id):
 
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(3))
-async def textwithmem(
-    msg: discord.Message, genprompt: str, prepend: str = None
-):
+async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None):
     global temp
     verify_chat_channel(msg.channel.id)
 
@@ -135,13 +133,10 @@ async def textwithmem(
     # temp = 0.75
 
     attachments = msg.attachments
+    text_attachments = [attachment for attachment in attachments if attachment.filename.split(".")[-1] in TEXT_EXT]
     txtread = ""
-    if len(attachments) > 0:
-        for attachment in attachments:
-            exts = attachment.filename.split(".")
-
-            if exts[-1] in TEXT_EXT:
-                txtread = txtread + attachment.filename + "\n" + text.readTxtFile(attachment.url)
+    for attachment in text_attachments:
+        txtread += attachment.filename + "\n" + text.readTxtFile(attachment.url)
 
     similartext = ""
     similars = vectors.query_similar_text(genprompt, k=2)

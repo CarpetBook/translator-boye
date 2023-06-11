@@ -25,35 +25,6 @@ import re
 import time
 import statistics
 
-import random
-import string
-
-from typing import Union
-
-from csv_logger import CsvLogger
-import logging
-
-filename = 'logs/translator_boye_tokens.csv'
-delimiter = ','
-level = logging.INFO
-custom_additional_levels = ['tokens']
-fmt = f'%(asctime)s{delimiter}%(levelname)s{delimiter}%(message)s'
-datefmt = '%Y/%m/%d %H:%M:%S'
-# max_size = 1024  # 1 kilobyte
-max_files = 100000
-header = ['date', 'prompt', 'generated', 'total']
-
-# Creat logger with csv rotating handler
-csvlogger = CsvLogger(filename=filename,
-                      delimiter=delimiter,
-                      level=level,
-                      add_level_names=custom_additional_levels,
-                      add_level_nums=None,
-                      fmt=fmt,
-                      datefmt=datefmt,
-                      #   max_size=max_size,
-                      max_files=max_files,
-                      header=header)
 
 TEXT_EXT = ["txt", "md", "py", "js", "cpp", "c", "json", "yaml", "yml"]
 IMG_EXT = ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "tif", "jfif", "exif"]

@@ -601,11 +601,7 @@ async def handle_command_message(message: discord.Message, orig: str):
     com, *argies = orig[1:].split()
     fullprompt = " ".join(argies)
 
-            async with message.channel.typing():
-            async with message.channel.typing():
-
     async with message.channel.typing():
-
         print("command: ", com)
         print("fullprompt: ", fullprompt)
 

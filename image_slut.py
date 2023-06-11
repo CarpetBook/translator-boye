@@ -199,7 +199,9 @@ async def textwithmem(msg: discord.Message, genprompt: str, prepend: str = None)
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(3))
 async def textwithmem_stream(
-    msg: Union[discord.Message, discord.Interaction], genprompt: str, prepend: str = None
+    msg: Union[discord.Message, discord.Interaction],
+    genprompt: str,
+    prepend: str = None,
 ):
     global temp
     verifyChatChannel(msg.channel.id)

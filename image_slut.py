@@ -270,7 +270,7 @@ async def textwithmem_stream(
 
         chunks.append(chunk)  # save the event response
 
-        chunk_message = chunk['choices'][0]['delta']  # extract the message
+        chunk_message = chunk["choices"][0]["delta"]  # extract the message
 
         if chunk_message.get("role") == "assistant":
             pass

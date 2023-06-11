@@ -69,13 +69,13 @@ print(f"Password: {internal_password}")
 
 tik = tiktoken.get_encoding("cl100k_base")
 
-with open("keys.json") as filey:
+with open("keys.json", encoding="utf-8") as filey:
     wee = json.load(filey)
     openai.api_key = wee["openai_key"]
     TOKEN = wee["discord_token"]
 
 
-with open("settings.json") as setty:
+with open("settings.json", encoding="utf-8") as setty:
     the = json.load(setty)
     chat_channel_ids = the["chat_channels"]
     print(chat_channel_ids)
@@ -83,9 +83,9 @@ with open("settings.json") as setty:
 
 
 def save_settings():
-    with open("settings.json", "w") as savey:
-        the = {"chat_channels": chat_channel_ids, "server_options": server_options}
-        savey.write(json.dumps(the, indent=4))
+    with open("settings.json", "w", encoding="utf-8") as savey:
+        settings_template = {"chat_channels": chat_channel_ids, "server_options": server_options}
+        savey.write(json.dumps(settings_template, indent=4))
 
 
 botintents = discord.Intents(messages=True, message_content=True)

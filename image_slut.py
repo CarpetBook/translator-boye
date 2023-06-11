@@ -51,7 +51,7 @@ chat_channel_ids = []
 server_options = {}
 
 internal_password = None
-temp = 0.75  # chatgpt temperature
+temp = 0  # chatgpt temperature
 
 stopAll = False  # flag to stop all generation processes
 

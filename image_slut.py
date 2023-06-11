@@ -739,69 +739,103 @@ async def handle_moderation_command(message: discord.Message, fullprompt: str):
     await message.reply(res[1])
 
 
-                if com == "teststream":
-                    await textwithmem_stream(message, genprompt=fullprompt)
-                    return
+# various helper functions
 
-        elif idh in chat_channel_ids or idh is None:
-            stopAll = False
-            # message.guild.id has to be string bc json won't accept int as key/property name
-            ops = server_options.get(str(message.channel.id), None)
-            prepense = server_options[str(message.channel.id)]["start_with"]
-            if ops is not None:
-                prefix = ops["chat_prefix"]
-            if not ops["can_chat"]:
-                return
-            if prefix is None or message.content.startswith(prefix):
-                async with message.channel.typing():
-                    if prefix is not None:
-                        orig = orig[len(prefix):]  # remove prefix
-                    await textwithmem_stream(message, genprompt=orig, prepend=prepense)
+def split_message(text: str) -> Generator[str, None, None]:
+    """
+    Splits a long message into smaller chunks with a maximum length of 1900 characters.
 
+    Parameters:
+        text: The message to split.
 
-def longMessage(text):
+    Returns:
+        Substrings of the message with a maximum length of 1900 characters.
+    """
     for i in range(0, len(text), 1900):
-        yield text[i:i + 1900]
+        yield text[i : i + 1900]
 
 
-def isNotBot():
-    def predicate(interaction: discord.Interaction) -> bool:
-        return interaction.user.id != bot.user.id
-    return app_commands.check(predicate)
+def is_known_server(server_id):
+    """
+    Checks if a server is in the server_options.
+
+    Parameters:
+        server_id: The ID of the server to check.
+
+    Returns:
+        True if the server is known, False otherwise.
+    """
+    return server_id in server_options
 
 
-def serverKnown(id):
-    print(id)
-    print(id in server_options)
-    return id in server_options
-
-
-def addServer(id):
-    server_options[id] = {"can_chat": True, "start_with": "", "chat_prefix": None, "allow_images": True, "system": None, "starter": None}
+def add_server(id):
+    server_options[id] = {
+        "can_chat": True,
+        "start_with": "",
+        "chat_prefix": None,
+        "allow_images": True,
+        "system": None,
+        "starter": None,
+    }
     return
 
 
 def verifyServer(id):
-    verify = serverKnown(str(id))
+    verify = is_known_server(str(id))
     if not verify:
-        addServer(str(id))
+        add_server(str(id))
     return verify
 
 
-def serverAllowedChat(interaction: discord.Interaction):
+def server_allowed_chat(interaction: discord.Interaction):
     ids = str(interaction.guild.id)
     print(ids)
-    print(serverKnown(ids))
+    print(is_known_server(ids))
     print(server_options[ids]["allow_images"])
-    return serverKnown(ids) and server_options[ids]["can_chat"]
+    return is_known_server(ids) and server_options[ids]["can_chat"]
 
 
-def serverAllowedImage(interaction: discord.Interaction):
+def server_allowed_image(interaction: discord.Interaction):
     ids = str(interaction.guild.id)
     print(ids)
-    print(serverKnown(ids))
+    print(is_known_server(ids))
     print(server_options[ids]["allow_images"])
-    return serverKnown(ids) and server_options[ids]["allow_images"]
+    return is_known_server(ids) and server_options[ids]["allow_images"]
+
+
+def is_unmatched_backticks(_text: str):
+    """
+    Find unclosed backticks and triple backticks in a string.
+
+    Parameters:
+        text (str): The string to check.
+
+    Returns:
+        tuple(bool, bool): True or False for any unmatched single backticks and/or triple backticks.
+    """
+    single = r"(?<!`)`{1}(?=[^`])"
+    triple = r"(?<!`)`{3}(?=[^`])"
+    single_matches = re.findall(single, _text)
+    triple_matches = re.findall(triple, _text)
+    return (len(single_matches) % 2 == 1, len(triple_matches) % 2 == 1)
+
+
+def verify_settings_exist():
+    """
+    Verify all of the bot settings exist in settings.json.
+    Cross references against settings_defaults.json.
+    If they don't exist, add them to settings.json, set to defaults,
+    and save the file.
+    """
+    try:
+        with open("settings_defaults.json", "r", encoding="utf-8") as defs:
+            defs = json.load(defs)
+            for setting in defs:
+                if server_options.get(setting, None) is None:
+                    server_options[setting] = defs[setting]
+    except KeyError:
+        print("whar?! key error in verify_settings_exist")
+    return
 
 
 @bot.tree.command(name="clear", description="Clear the chat history for this channel.")

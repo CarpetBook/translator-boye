@@ -1,8 +1,19 @@
 # ChatMemory class that manages the chat history in a single channel
-from tools import vectors
+
+import json
+
+use_pinecone = False
+
+with open("settings.json", "r") as f:
+    settings = json.load(f)
+    if settings["server_options"]["pinecone_enabled"]:
+        use_pinecone = True
+        from tools import vectors
 
 
 class ChatMemory:
+    global use_pinecone
+
     def __init__(self, min_message_limit=5, max_message_limit=20):
         self.memory = []
         self.system = None
@@ -10,7 +21,8 @@ class ChatMemory:
         self.min_message_limit = min_message_limit
         self.max_message_limit = max_message_limit
         self.role = "assistant"
-        self.last_message = None
+        self.last_prompt = None
+        self.last_response = None
 
     def add(self, role, *message):
         for i in message:
@@ -47,7 +59,8 @@ class ChatMemory:
             if user is not None:
                 text = f"User: {user}\n"
             text += f"Assistant: {assistant}"
-            vectors.save_longterm_text([text])
+            if use_pinecone:
+                vectors.save_longterm_text([text])
             # self.memory = self.memory[3:]  # if chat memory is longer than 20 messages, cut off the oldest two
             if self.system is not None:
                 self.memory.insert(0, {"role": "system", "content": self.system})
@@ -77,7 +90,7 @@ class ChatMemory:
             text += f"\nAssistant: {assistant}"
             savetexts.append(text)
 
-        if len(savetexts) > 0:
+        if len(savetexts) > 0 and use_pinecone:
             vectors.save_longterm_text(savetexts)
 
         self.memory = []
@@ -98,6 +111,10 @@ class ChatMemory:
         self.starter = newstarter
         return self
 
-    def setLastMessage(self, message):
-        self.last_message = message
+    def set_last_prompt(self, message):
+        self.last_prompt = message
+        return self
+
+    def set_last_response(self, message):
+        self.last_response = message
         return self

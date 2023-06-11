@@ -104,20 +104,20 @@ for idx in chat_channel_ids:
     chat_memories[idx] = ChatMemory()
 
 
-def isChatChannel(id):
-    return id in chat_channel_ids
+def is_chat_channel(_id):
+    return _id in chat_channel_ids
 
 
-def addChatChannel(id):
-    chat_channel_ids.append(id)
-    chat_memories[id] = ChatMemory()
+def add_chat_channel(_id):
+    chat_channel_ids.append(_id)
+    chat_memories[_id] = ChatMemory()
     save_settings()
 
 
-def verifyChatChannel(id):
-    verify = isChatChannel(id)
+def verify_chat_channel(_id):
+    verify = is_chat_channel(_id)
     if not verify:
-        addChatChannel(id)
+        add_chat_channel(_id)
     return verify
 
 

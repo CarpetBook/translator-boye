@@ -336,6 +336,7 @@ async def textwithmem_stream(
 
 @bot.listen("on_ready")
 async def on_ready():
+    await delete_old_files()
     print("Hi! I'm ready!")
 
 

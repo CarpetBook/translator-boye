@@ -1,5 +1,6 @@
 import base64
 import openai
+import os
 import time
 import requests
 from PIL import Image, ImageDraw
@@ -110,14 +111,22 @@ def cropSquare(image: Image):
         right = width - left
         top = 0
         bottom = height
-        return image.crop((left, top, right, bottom))
+        image = image.crop((left, top, right, bottom))
     else:
         diff = height - width
         left = 0
         right = width
         top = diff / 2
         bottom = height - top
-        return image.crop((left, top, right, bottom))
+        image = image.crop((left, top, right, bottom))
+
+    # verify if image is square
+    width, height = image.size
+    if abs(width - height) == 1:
+        if width > height:
+            return image.crop((0, 0, height, height))
+        else:
+            return image.crop((0, 0, width, width))
 
 
 def makeTransparentEllipse(image: Image):
